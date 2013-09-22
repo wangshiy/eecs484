@@ -1,0 +1,19 @@
+DROP TABLE Users
+
+DROP TABLE Hometown
+
+DROP TABLE CurrentLocation
+
+DROP TABLE EduProgram
+
+/* NEED FRIENDSHIP INFO */
+
+DROP TABLE Album
+
+DROP TABLE Photo
+
+DROP TABLE PhotoTags
+
+DROP TABLE Event
+
+DROP TABLE Event_Participants
