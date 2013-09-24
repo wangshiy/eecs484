@@ -16,7 +16,7 @@ CREATE TABLE USERS(
 );
 
 CREATE TABLE HOME_LOCATION(
-	LOC_ID			VARCHAR2(100),
+	HOME_ID			VARCHAR2(100),
 	USER_ID 		VARCHAR2(100),
 	CITY 			VARCHAR2(100),
 	STATE			VARCHAR2(100),
@@ -31,7 +31,7 @@ CREATE TABLE HOME_LOCATION(
 	Foreign key USER_ID represents which user is currently in which cities
 */
 CREATE TABLE CUR_LOCATION (
-	LOC_ID			VARCHAR2(100),
+	CUR_ID			VARCHAR2(100),
 	USER_ID 		VARCHAR2(100),
 	CITY			VARCHAR2(100),
 	STATE			VARCHAR2(100),
@@ -78,7 +78,7 @@ CREATE TRIGGER home_trigger
 BEFORE INSERT ON HOME_LOCATION
 FOR EACH ROW
 BEGIN
-SELECT home_trigger.nextval into :new.LOC_ID from dual; 
+SELECT home_trigger.nextval into :new.HOME_ID from dual; 
 END; 
 .
 RUN;
@@ -91,7 +91,7 @@ CREATE TRIGGER cur_trigger
 BEFORE INSERT ON CUR_LOCATION
 FOR EACH ROW
 BEGIN
-SELECT cur_trigger.nextval into :new.LOC_ID from dual; 
+SELECT cur_trigger.nextval into :new.CUR_ID from dual; 
 END; 
 .
 RUN;
