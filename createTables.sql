@@ -6,22 +6,13 @@ CREATE TABLE USERS(
 	MONTH_OF_BIRTH	NUMBER(38),
 	DAY_OF_BIRTH 	NUMBER(38),
 	GENDER 			VARCHAR2(100),
-	CURRENT_CITY	VARCHAR2(100),
-	HOME_CITY		VARCHAR2(100),
-	INSTITUTION_NAME		VARCHAR2(100),
-	FRIEND_ID		VARCHAR2(100),
-	FOREIGN KEY (CURRENT_CITY) 
-        REFERENCES LOCATIONS(LOC_ID),
+	HOME_CITY		VARCHAR2(100) UNIQUE,	/*Hometowns are one-to-one so foreign key here*/
 	FOREIGN KEY (HOME_CITY) 
         REFERENCES LOCATIONS(LOC_ID),
-	FOREIGN KEY (INSTITUTION_NAME) 
-        REFERENCES EDUPROGRAM(EDU_ID),
-	FOREIGN KEY (FRIEND_ID) 
-        REFERENCES EDUPROGRAM(F_ID),
 	PRIMARY KEY 	(USER_ID)
 );
 
-CREATE TABLE LOCATIONS(
+CREATE TABLE HOME_LOCATION(
 	LOC_ID				VARCHAR2(100),
 	CITY 				VARCHAR2(100),
 	STATE				VARCHAR2(100),
@@ -29,24 +20,58 @@ CREATE TABLE LOCATIONS(
 	PRIMARY KEY 		(LOC_ID)
 );
 
-CREATE SEQUENCE loc_sequence 
+CREATE SEQUENCE home_sequence 
 START WITH 1 
 INCREMENT BY 1;
-CREATE TRIGGER loc_trigger
-BEFORE INSERT ON LOCATIONS
+CREATE TRIGGER home_trigger
+BEFORE INSERT ON HOME_LOCATION
 FOR EACH ROW
 BEGIN
-SELECT loc_sequence.nextval into :new.LOC_ID from dual; 
+SELECT home_trigger.nextval into :new.LOC_ID from dual; 
 END; 
 .
 RUN;
 
+/*
+	Current City is a one-to-many relation
+	Foreign key USER_ID represents which user is currently in which cities
+*/
+CREATE TABLE CUR_LOCATION {
+	LOC_ID			VARCHAR2(100),
+	USER_ID 		VARCHAR2(100),
+	CITY			VARCHAR2(100),
+	STATE			VARCHAR2(100),
+	COUNTRY			VARCHAR2(100),
+	FOREIGN KEY (USER_ID) 
+        REFERENCES USERS(USER_ID),
+	PRIMARY KEY 		(LOC_ID)
+}
+
+CREATE SEQUENCE cur_sequence 
+START WITH 1 
+INCREMENT BY 1;
+CREATE TRIGGER cur_trigger
+BEFORE INSERT ON CUR_LOCATION
+FOR EACH ROW
+BEGIN
+SELECT cur_trigger.nextval into :new.LOC_ID from dual; 
+END; 
+.
+RUN;
+
+/*
+	Education Program is a one-to-many relation, 
+	Foreign key to USER_ID represents which user went to the which schools
+*/
 CREATE TABLE EDUPROGRAM (
 	EDU_ID						VARCHAR2(100),
+	USER_ID 					VARCHAR2(100),
 	INSTITUTION_NAME			VARCHAR2(100),
 	PROGRAM_YEAR				NUMBER(38),
 	PROGRAM_CONCENTRATION 		CHAR(100),
 	PROGRAM_DEGREE				VARCHAR2(100),
+	FOREIGN KEY (USER_ID) 
+        REFERENCES USERS(USER_ID),
 	PRIMARY KEY 				(EDU_ID)
 );
 
@@ -62,25 +87,19 @@ END;
 .
 RUN;
 
+/*
+	Friendship information is many-to-many,
+	Two foreign keys, both pointing to USERS, representing who is friends with who
+*/
 CREATE TABLE FRIENDSHIP(
-	F_ID				VARCHAR2(100),
     USER1_ID 			VARCHAR2(100),
 	USER2_ID 			VARCHAR2(100) NOT NULL UNIQUE,
-	PRIMARY KEY 		(F_ID),
+	FOREIGN KEY (USER1_ID) 
+        REFERENCES USERS(USER_ID),
+	FOREIGN KEY (USER2_ID) 
+        REFERENCES USERS(USER_ID),
 	CONSTRAINT friend_constraint CHECK (USER1_ID != USER2_ID)
 );
-
-CREATE SEQUENCE fr_sequence 
-START WITH 1 
-INCREMENT BY 1;
-CREATE TRIGGER fr_trigger
-BEFORE INSERT ON FRIENDSHIP
-FOR EACH ROW
-BEGIN
-SELECT fr_sequence.nextval into :new.F_ID from dual; 
-END; 
-.
-RUN;
 
 CREATE TABLE ALBUM (
 	ALBUM_ID			VARCHAR2(100),
@@ -106,6 +125,10 @@ CREATE TABLE PHOTO (
 	PRIMARY KEY 		(PHOTO_ID)
 );
 
+/*
+	Album-Photo is many-to-many,
+	Two foreign keys, representing which photos belong to which albums
+*/
 CREATE TABLE ALBUM_MEMBERS (
 	PHOTO_ID			VARCHAR2(100),
 	ALBUM_ID			VARCHAR2(100),
@@ -115,6 +138,10 @@ CREATE TABLE ALBUM_MEMBERS (
         REFERENCES ALBUM(ALBUM_ID)
 }
 
+/*
+	PHOTOAGS are one-to-many
+	Foreign key to PHOTO_ID, representing which photo is tagged
+*/
 CREATE TABLE PHOTOTAGS(
 	TAG_ID				VARCHAR2(100),
 	PHOTO_ID 			VARCHAR2(100),
@@ -139,6 +166,10 @@ END;
 .
 RUN;
 
+/*
+	EVENTS are one-to-many
+	Foreign key to USER_ID, representing which user created the event
+*/
 CREATE TABLE EVENT (
 	EVENT_ID			VARCHAR2(100),
 	EVENT_NAME			VARCHAR2(100),
