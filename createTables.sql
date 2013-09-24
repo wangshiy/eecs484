@@ -6,31 +6,21 @@ CREATE TABLE USERS(
 	MONTH_OF_BIRTH	NUMBER(38),
 	DAY_OF_BIRTH 	NUMBER(38),
 	GENDER 			VARCHAR2(100),
-	HOME_CITY		VARCHAR2(100) UNIQUE,	/*Hometowns are one-to-one so foreign key here*/
 	FOREIGN KEY (HOME_CITY) 
         REFERENCES HOME_LOCATION(LOC_ID),
 	PRIMARY KEY 	(USER_ID)
 );
 
 CREATE TABLE HOME_LOCATION(
-	LOC_ID				VARCHAR2(100),
-	CITY 				VARCHAR2(100),
-	STATE				VARCHAR2(100),
-	COUNTRY				VARCHAR2(100),
-	PRIMARY KEY 		(LOC_ID)
+	LOC_ID			VARCHAR2(100),
+	USER_ID 		VARCHAR2(100),
+	CITY 			VARCHAR2(100),
+	STATE			VARCHAR2(100),
+	COUNTRY			VARCHAR2(100),
+	FOREIGN KEY (USER_ID) 
+        REFERENCES USERS(USER_ID),
+	PRIMARY KEY 	(LOC_ID)
 );
-
-CREATE SEQUENCE home_sequence 
-START WITH 1 
-INCREMENT BY 1;
-CREATE TRIGGER home_trigger
-BEFORE INSERT ON HOME_LOCATION
-FOR EACH ROW
-BEGIN
-SELECT home_trigger.nextval into :new.LOC_ID from dual; 
-END; 
-.
-RUN;
 
 /*
 	Current City is a one-to-many relation
@@ -45,19 +35,7 @@ CREATE TABLE CUR_LOCATION {
 	FOREIGN KEY (USER_ID) 
         REFERENCES USERS(USER_ID),
 	PRIMARY KEY 		(LOC_ID)
-}
-
-CREATE SEQUENCE cur_sequence 
-START WITH 1 
-INCREMENT BY 1;
-CREATE TRIGGER cur_trigger
-BEFORE INSERT ON CUR_LOCATION
-FOR EACH ROW
-BEGIN
-SELECT cur_trigger.nextval into :new.LOC_ID from dual; 
-END; 
-.
-RUN;
+};
 
 /*
 	Education Program is a one-to-many relation, 
@@ -75,18 +53,6 @@ CREATE TABLE EDUPROGRAM (
 	PRIMARY KEY 				(EDU_ID)
 );
 
-CREATE SEQUENCE edu_sequence 
-START WITH 1 
-INCREMENT BY 1;
-CREATE TRIGGER edu_trigger
-BEFORE INSERT ON EDUPROGRAM
-FOR EACH ROW
-BEGIN
-SELECT edu_sequence.nextval into :new.EDU_ID from dual; 
-END; 
-.
-RUN;
-
 /*
 	Friendship information is many-to-many,
 	Two foreign keys, both pointing to USERS, representing who is friends with who
@@ -100,6 +66,44 @@ CREATE TABLE FRIENDSHIP(
         REFERENCES USERS(USER_ID),
 	CONSTRAINT friend_constraint CHECK (USER1_ID != USER2_ID)
 );
+
+CREATE SEQUENCE home_sequence 
+START WITH 1 
+INCREMENT BY 1;
+CREATE TRIGGER home_trigger
+BEFORE INSERT ON HOME_LOCATION
+FOR EACH ROW
+BEGIN
+SELECT home_trigger.nextval into :new.LOC_ID from dual; 
+END; 
+.
+RUN;
+
+
+CREATE SEQUENCE cur_sequence 
+START WITH 1 
+INCREMENT BY 1;
+CREATE TRIGGER cur_trigger
+BEFORE INSERT ON CUR_LOCATION
+FOR EACH ROW
+BEGIN
+SELECT cur_trigger.nextval into :new.LOC_ID from dual; 
+END; 
+.
+RUN;
+
+CREATE SEQUENCE edu_sequence 
+START WITH 1 
+INCREMENT BY 1;
+CREATE TRIGGER edu_trigger
+BEFORE INSERT ON EDUPROGRAM
+FOR EACH ROW
+BEGIN
+SELECT edu_sequence.nextval into :new.EDU_ID from dual; 
+END; 
+.
+RUN;
+
 
 CREATE TABLE ALBUM (
 	ALBUM_ID			VARCHAR2(100),
