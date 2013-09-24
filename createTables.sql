@@ -6,8 +6,6 @@ CREATE TABLE USERS(
 	MONTH_OF_BIRTH	NUMBER(38),
 	DAY_OF_BIRTH 	NUMBER(38),
 	GENDER 			VARCHAR2(100),
-	FOREIGN KEY (HOME_CITY) 
-        REFERENCES HOME_LOCATION(LOC_ID),
 	PRIMARY KEY 	(USER_ID)
 );
 
@@ -26,7 +24,7 @@ CREATE TABLE HOME_LOCATION(
 	Current City is a one-to-many relation
 	Foreign key USER_ID represents which user is currently in which cities
 */
-CREATE TABLE CUR_LOCATION {
+CREATE TABLE CUR_LOCATION (
 	LOC_ID			VARCHAR2(100),
 	USER_ID 		VARCHAR2(100),
 	CITY			VARCHAR2(100),
@@ -35,7 +33,7 @@ CREATE TABLE CUR_LOCATION {
 	FOREIGN KEY (USER_ID) 
         REFERENCES USERS(USER_ID),
 	PRIMARY KEY 		(LOC_ID)
-};
+);
 
 /*
 	Education Program is a one-to-many relation, 
