@@ -1,3 +1,9 @@
+/*
+  EECS 484 Project 1
+  Galen Gong (ggong)
+  Aditi Rajagopal (araja)
+*/
+
 DROP TABLE FRIENDSHIP;
 DROP TABLE CUR_LOCATION;
 DROP SEQUENCE cur_sequence;
