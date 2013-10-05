@@ -195,9 +195,9 @@ public class MyFakebookOracle extends FakebookOracle {
 		this.countLonelyFriends = 0;
 		while(rst.next()){	//read individual users
 			int user_id = rst.getInt(1);
-			String first_name = rst.getString(2);
-			String last_name = rst.getString(3);
-			this.lonelyFriends.add(new UserInfo(new Long(user_id), first_name, last_name));
+			String FirstName = rst.getString(2);
+			String LastName = rst.getString(3);
+			this.lonelyFriends.add(new UserInfo(new Long(user_id), FirstName, LastName));
 			this.countLonelyFriends++;
 		}
 
@@ -218,7 +218,18 @@ public class MyFakebookOracle extends FakebookOracle {
 		this.countLiveAtHome = 1;
 	*/
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery();
+
+		ResultSet rst = stmt.executeQuery("select U.user_id, U.first_name, U.last_name from " + userTableName +" U, " + currentCityTableName + " C, " + hometownCityTableName +  " H where U.user_id = C.user_id AND U.user_id = H.user_id AND C.current_city_id = H.hometown_city_id");
+
+		this.countLiveAtHome = 0;
+
+		while(rst.next()){
+			int user_id = rst.getInt(1);
+			String FirstName = rst.getString(2);
+			String LastName = rst.getString(3);
+			this.liveAtHome.add(new UserInfo(new Long(user_id), FirstName, LastName));
+			this.countLiveAtHome = this.countLiveAtHome + 1;
+		}
 		
 		// Close statement and result set
 		rst.close();
