@@ -29,7 +29,6 @@ public class MyFakebookOracle extends FakebookOracle {
 	String coverPhotoTableName = null;
 	String tagTableName = null;
 	
-	
 	// DO NOT modify this constructor
 	public MyFakebookOracle(String u, Connection c) {
 		super();
@@ -142,7 +141,7 @@ public class MyFakebookOracle extends FakebookOracle {
 
 
 		// Iterate to the end of the table where the shortest last_name is
-		String baseString;
+		String baseString = null;
 		while(rst.next()) {
 			String LastName = rst.getString(1);
 			if (rst.isFirst()) {
@@ -155,7 +154,7 @@ public class MyFakebookOracle extends FakebookOracle {
 		}
 		
 		// Iterate back from the end until a last_name longer than the shortest last_name is encountered
-		while(rst.back()) {
+		while(rst.previous()) {
 			String LastName = rst.getString(1);
 			if (rst.isLast()) {
 				baseString = LastName;
@@ -219,7 +218,9 @@ public class MyFakebookOracle extends FakebookOracle {
 	*/
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-		ResultSet rst = stmt.executeQuery("select U.user_id, U.first_name, U.last_name from " + userTableName +" U, " + currentCityTableName + " C, " + hometownCityTableName +  " H where U.user_id = C.user_id AND U.user_id = H.user_id AND C.current_city_id = H.hometown_city_id");
+		ResultSet rst = stmt.executeQuery("select U.user_id, U.first_name, U.last_name from " + userTableName +" U, " + 
+				currentCityTableName + " C, " + hometownCityTableName +  
+				" H where U.user_id = C.user_id AND U.user_id = H.user_id AND C.current_city_id = H.hometown_city_id");
 
 		this.countLiveAtHome = 0;
 
@@ -257,7 +258,20 @@ public class MyFakebookOracle extends FakebookOracle {
 		this.photosWithMostTags.add(tp);
 	*/	
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery();
+
+		ResultSet rst = stmt.executeQuery("select count(T.photo_id), T.tag_subject_id, U.first_name, U.last_name from " + tagTableName 
+				+ " T," + userTableName + 
+				albumTableName + " A, " + userTableName +  
+				" U where "
+				+ " ORDER BY T.photo_id ASC");
+
+		while(rst.next()){
+			int user_id = rst.getInt(1);
+			String FirstName = rst.getString(2);
+			String LastName = rst.getString(3);
+			this.liveAtHome.add(new UserInfo(new Long(user_id), FirstName, LastName));
+			this.countLiveAtHome = this.countLiveAtHome + 1;
+		}
 		
 		// Close statement and result set
 		rst.close();
