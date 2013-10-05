@@ -126,19 +126,19 @@ public class MyFakebookOracle extends FakebookOracle {
 	// (3) The most common last name, and the number of times it appears (if there is a tie, include all in result)
 	//
 	public void findNameInfo() throws SQLException { // Query1
-		// Find the following information from your database and store the information as shown 
-		// this.longestLastNames.add("JohnJacobJingleheimerSchmidt");
-		// this.shortestLastNames.add("Ng");
-		// this.shortestLastNames.add("Fu");
-		// this.shortestLastNames.add("Wu");
-		// this.mostCommonLastNames.add("Wang");
-		// this.mostCommonLastNames.add("Smith");
-		// this.mostCommonLastNamesCount = 10;
-
-		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
-		ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery("select last_name"+userTableName+
-				" where last_name is not null group by last_name order by length(last_name) desc");
+	/*
+		Find the following information from your database and store the information as shown 
+		this.longestLastNames.add("JohnJacobJingleheimerSchmidt");
+		this.shortestLastNames.add("Ng");
+		this.shortestLastNames.add("Fu");
+		this.shortestLastNames.add("Wu");
+		this.mostCommonLastNames.add("Wang");
+		this.mostCommonLastNames.add("Smith");
+		this.mostCommonLastNamesCount = 10;
+	*/
+		
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery("select last_name "+userTableName+" where last_name is not null group by last_name order by length(last_name) desc");
 
 
 		// Iterate to the end of the table where the shortest last_name is
@@ -183,10 +183,27 @@ public class MyFakebookOracle extends FakebookOracle {
 	// the constraint that user1_id < user2_id
 	//
 	public void lonelyFriends() throws SQLException {
-		// Find the following information from your database and store the information as shown 
+	/*
+		Find the following information from your database and store the information as shown 
 		this.lonelyFriends.add(new UserInfo(10L, "Billy", "SmellsFunny"));
 		this.lonelyFriends.add(new UserInfo(11L, "Jenny", "BadBreath"));
 		this.countLonelyFriends = 2;
+	*/
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery("select U.user_id, U.first_name, U.last_name from "+ userTableName +" U where U.user_id not in (select distinct U.user1_id from " + friendsTableName + " union select distinct U.user2_id from "+ friendsTableName + ")");
+
+		this.countLonelyFriends = 0;
+		while(rst.next()){	//read individual users
+			int user_id = rst.getInt(1);
+			String first_name = rst.getString(2);
+			String last_name = rst.getString(3);
+			this.lonelyFriends.add(new UserInfo(new Long(user_id), first_name, last_name));
+			this.countLonelyFriends++;
+		}
+
+		// Close statement and result set
+		rst.close();
+		stmt.close();
 	}
 	 
 
@@ -196,8 +213,16 @@ public class MyFakebookOracle extends FakebookOracle {
 	// (I.e., current_city = hometown_city)
 	//	
 	public void liveAtHome() throws SQLException {
+	/*
 		this.liveAtHome.add(new UserInfo(11L, "Heather", "Hometowngirl"));
 		this.countLiveAtHome = 1;
+	*/
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery();
+		
+		// Close statement and result set
+		rst.close();
+		stmt.close();
 	}
 
 
@@ -208,6 +233,7 @@ public class MyFakebookOracle extends FakebookOracle {
 	// If there are ties, choose the photo with the smaller numeric PhotoID first
 	// 
 	public void findPhotosWithMostTags(int n) throws SQLException { 
+	/*
 		String photoId = "1234567";
 		String albumId = "123456789";
 		String albumName = "album1";
@@ -218,6 +244,13 @@ public class MyFakebookOracle extends FakebookOracle {
 		tp.addTaggedUser(new UserInfo(12345L, "taggedUserFirstName1", "taggedUserLastName1"));
 		tp.addTaggedUser(new UserInfo(12345L, "taggedUserFirstName2", "taggedUserLastName2"));
 		this.photosWithMostTags.add(tp);
+	*/	
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery();
+		
+		// Close statement and result set
+		rst.close();
+		stmt.close();
 	}
 
 	
@@ -238,7 +271,7 @@ public class MyFakebookOracle extends FakebookOracle {
 	// (iii) If there are still ties, choose the pair with the smaller user_id for the male
 	//
 	public void matchMaker(int n, int yearDiff) throws SQLException { 
-		Long girlUserId = 123L;
+	/*  Long girlUserId = 123L;
 		String girlFirstName = "girlFirstName";
 		String girlLastName = "girlLastName";
 		int girlYear = 1988;
@@ -256,6 +289,14 @@ public class MyFakebookOracle extends FakebookOracle {
 		mp.addSharedPhoto(new PhotoInfo(sharedPhotoId, sharedPhotoAlbumId, 
 				sharedPhotoAlbumName, sharedPhotoCaption, sharedPhotoLink));
 		this.bestMatches.add(mp);
+	*/
+		
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery();
+		
+		// Close statement and result set
+		rst.close();
+		stmt.close();
 	}
 
 	
@@ -275,6 +316,7 @@ public class MyFakebookOracle extends FakebookOracle {
 	//
 	@Override
 	public void suggestFriendsByMutualFriends(int n) throws SQLException {
+	/*
 		Long user1_id = 123L;
 		String user1FirstName = "Friend1FirstName";
 		String user1LastName = "Friend1LastName";
@@ -286,7 +328,15 @@ public class MyFakebookOracle extends FakebookOracle {
 		p.addSharedFriend(567L, "sharedFriend1FirstName", "sharedFriend1LastName");
 		p.addSharedFriend(678L, "sharedFriend2FirstName", "sharedFriend2LastName");
 		p.addSharedFriend(789L, "sharedFriend3FirstName", "sharedFriend3LastName");
+	*/
 		this.suggestedFriendsPairs.add(p);
+
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);		
+		ResultSet rst = stmt.executeQuery();
+		
+		// Close statement and result set
+		rst.close();
+		stmt.close();
 	}
 	
 	
@@ -299,8 +349,16 @@ public class MyFakebookOracle extends FakebookOracle {
 	// on the same day, then assume that the one with the larger user_id is older
 	//
 	public void findAgeInfo(Long user_id) throws SQLException {
+	/*
 		this.oldestFriend = new UserInfo(1L, "Oliver", "Oldham");
 		this.youngestFriend = new UserInfo(25L, "Yolanda", "Young");
+	*/
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery();
+		
+		// Close statement and result set
+		rst.close();
+		stmt.close();
 	}
 	
 	
@@ -311,9 +369,17 @@ public class MyFakebookOracle extends FakebookOracle {
 	// events in that city.  If there is a tie, return the names of all of the (tied) cities.
 	//
 	public void findEventCities() throws SQLException {
+	/*
 		this.eventCount = 12;
 		this.popularCityNames.add("Ann Arbor");
 		this.popularCityNames.add("Ypsilanti");
+	*/
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery();
+		
+		// Close statement and result set
+		rst.close();
+		stmt.close();
 	}
 	
 	
@@ -332,6 +398,7 @@ public class MyFakebookOracle extends FakebookOracle {
 	//  
 	//
 	public void findPotentialSiblings() throws SQLException {
+	/*
 		Long user1_id = 123L;
 		String user1FirstName = "Friend1FirstName";
 		String user1LastName = "Friend1LastName";
@@ -340,6 +407,13 @@ public class MyFakebookOracle extends FakebookOracle {
 		String user2LastName = "Friend2LastName";
 		SiblingInfo s = new SiblingInfo(user1_id, user1FirstName, user1LastName, user2_id, user2FirstName, user2LastName);
 		this.siblings.add(s);
+	*/
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery();
+		
+		// Close statement and result set
+		rst.close();
+		stmt.close();
 	}
 	
 }
