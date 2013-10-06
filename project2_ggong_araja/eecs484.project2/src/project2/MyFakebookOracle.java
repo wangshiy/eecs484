@@ -246,31 +246,42 @@ public class MyFakebookOracle extends FakebookOracle {
 	// 
 	public void findPhotosWithMostTags(int n) throws SQLException { 
 	/*
-		String photoId = "1234567";
-		String albumId = "123456789";
-		String albumName = "album1";
-		String photoCaption = "caption1";
-		String photoLink = "http://google.com";
-		PhotoInfo p = new PhotoInfo(photoId, albumId, albumName, photoCaption, photoLink);
-		TaggedPhotoInfo tp = new TaggedPhotoInfo(p);
-		tp.addTaggedUser(new UserInfo(12345L, "taggedUserFirstName1", "taggedUserLastName1"));
-		tp.addTaggedUser(new UserInfo(12345L, "taggedUserFirstName2", "taggedUserLastName2"));
-		this.photosWithMostTags.add(tp);
+		Do we need NOT NULL statements?
 	*/	
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-		ResultSet rst = stmt.executeQuery("select count(T.photo_id), T.tag_subject_id, U.first_name, U.last_name from " + tagTableName 
-				+ " T," + userTableName + 
-				albumTableName + " A, " + userTableName +  
-				" U where "
-				+ " ORDER BY T.photo_id ASC");
+		ResultSet rst = stmt.executeQuery("SELECT count(T.tag_photo_id), T.tag_photo_id, P.photo_caption, P.photo_link, A.album_id, A.album_name, U.user_id, U.first_name, U.last_name from "
+				+ tagTableName + " T "
+				+ "INNER JOIN " + photoTableName + " P ON T.tag_photo_id=P.photo_id "
+				+ "INNER JOIN " + albumTableName + " A ON P.album_id=A.album_id "
+				+ "INNER JOIN" + userTableName + " U ON T.tag_subject_id=U.user_id "
+				+ "GROUP BY 1 "
+				+ "ORDER BY 1 DESC, T.tag_photo_id ASC");
 
-		while(rst.next()){
-			int user_id = rst.getInt(1);
-			String FirstName = rst.getString(2);
-			String LastName = rst.getString(3);
-			this.liveAtHome.add(new UserInfo(new Long(user_id), FirstName, LastName));
-			this.countLiveAtHome = this.countLiveAtHome + 1;
+		
+		String previous_tag_photo_id = null;
+		for(int i = 0; i < n; i++){
+			String photoId = rst.getString(2);
+			String albumId = rst.getString(5);
+			String albumName = rst.getString(6);
+			String photoCaption = rst.getString(3);
+			String photoLink = rst.getString(4);
+			PhotoInfo p = new PhotoInfo(photoId, albumId, albumName, photoCaption, photoLink);
+			
+			// Get tagged users
+			TaggedPhotoInfo tp = new TaggedPhotoInfo(p);
+			previous_tag_photo_id = photoId;
+			
+			while(rst.next()) {
+				photoId = rst.getString(2);
+				if(photoId != previous_tag_photo_id)
+					break;
+				long user_id = rst.getLong(7);
+				String first_name = rst.getString(8);
+				String last_name = rst.getString(9);
+				tp.addTaggedUser(new UserInfo(user_id, first_name, last_name));
+				this.photosWithMostTags.add(tp);
+			}
 		}
 		
 		// Close statement and result set
