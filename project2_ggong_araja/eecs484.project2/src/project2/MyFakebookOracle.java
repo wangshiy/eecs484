@@ -289,9 +289,6 @@ public class MyFakebookOracle extends FakebookOracle {
 		stmt.close();
 	}
 
-	
-	
-	
 	@Override
 	// **** Query 5 ****
 	// Find suggested "match pairs" of friends, using the following criteria:
@@ -386,8 +383,12 @@ public class MyFakebookOracle extends FakebookOracle {
 	//
 	public void findAgeInfo(Long user_id) throws SQLException {
 	/*
-		this.oldestFriend = new UserInfo(1L, "Oliver", "Oldham");
-		this.youngestFriend = new UserInfo(25L, "Yolanda", "Young");
+		SELECT F.user_id1, F.user_id2, U.first_name, U.last_name, U.year_of_birth, U.first_name, U.last_name
+		FROM friendsTableName AS F
+		INNER JOIN userTableName AS U
+		ON F.user_id2 = U.user_id
+		WHERE F.user_id1 = user_id
+		ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC;
 	*/
 		statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rst = stmt.executeQuery("SELECT F.user_id1, F.user_id2, U.year_of_birth, U.first_name, U.last_name "
@@ -395,18 +396,22 @@ public class MyFakebookOracle extends FakebookOracle {
 		+ "INNER JOIN " + userTableName + " AS U "
 		+ "ON F.user_id2=U.user_id "
 		+ "WHERE F.user_id1=" + user_id + " "
-		+ "ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC;"
+		+ "ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC"
 		);
 		
-		/*SELECT F.user_id1, F.user_id2, U.year_of_birth, U.first_name, U.last_name
-		FROM friendsTableName AS F
-		INNER JOIN userTableName AS U
-		ON F.user_id2 = U.user_id
-		WHERE F.user_id1 = user_id
-		ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC;*/
-		
-		
-		
+		while(rst.next()) {
+			long userId = rst.getLong(2);
+			String firstName = rst.getString(3);
+			String lastName = rst.getString(4);
+			this.oldestFriend = new UserInfo(userId, firstName, lastName);
+			this.youngestFriend = new UserInfo(25L, "Yolanda", "Young");
+		}
+		if(rst.previous()) {
+			long userId = rst.getLong(2);
+			String firstName = rst.getString(3);
+			String lastName = rst.getString(4);
+			this.youngestFriend = new UserInfo(userId, firstName, lastName);
+		}
 		
 		// Close statement and result set
 		rst.close();
@@ -422,19 +427,28 @@ public class MyFakebookOracle extends FakebookOracle {
 	//
 	public void findEventCities() throws SQLException {
 	/*
+		SELECT count(E.event_city_id), C.city_name
+		FROM eventTableName AS E
+		INNER JOIN cityTableName as C
+		ON E.event_city_id=C.city_id
+		ORDER BY 1;
 		this.eventCount = 12;
 		this.popularCityNames.add("Ann Arbor");
 		this.popularCityNames.add("Ypsilanti");
 	*/
-		/*Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery();
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		
+		ResultSet rst = stmt.executeQuery("SELECT count(E.event_city_id), C.city_name "
+		+ "FROM " + eventTableName + " AS E "
+		+ "INNER JOIN " + cityTableName + " AS C "
+		+ "ON E.event_city_id=C.city_id "
+		+ "ORDER BY 1"
+		);
 		
 		// Close statement and result set
 		rst.close();
-		stmt.close();*/
+		stmt.close();
 	}
-	
-	
 	
 	@Override
 //	 ***** Query 9 *****
@@ -467,5 +481,4 @@ public class MyFakebookOracle extends FakebookOracle {
 		rst.close();
 		stmt.close();*/
 	}
-	
 }
