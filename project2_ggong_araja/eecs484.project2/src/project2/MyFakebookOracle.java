@@ -390,7 +390,7 @@ public class MyFakebookOracle extends FakebookOracle {
 		WHERE F.user_id1 = user_id
 		ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC;
 	*/
-		statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rst = stmt.executeQuery("SELECT F.user_id1, F.user_id2, U.year_of_birth, U.first_name, U.last_name "
 		+ "FROM " + friendsTableName + " AS F "
 		+ "INNER JOIN " + userTableName + " AS U "
