@@ -327,12 +327,12 @@ public class MyFakebookOracle extends FakebookOracle {
 		this.bestMatches.add(mp);
 	*/
 		
-		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		/*Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rst = stmt.executeQuery();
 		
 		// Close statement and result set
 		rst.close();
-		stmt.close();
+		stmt.close();*/
 	}
 
 	
@@ -365,14 +365,14 @@ public class MyFakebookOracle extends FakebookOracle {
 		p.addSharedFriend(678L, "sharedFriend2FirstName", "sharedFriend2LastName");
 		p.addSharedFriend(789L, "sharedFriend3FirstName", "sharedFriend3LastName");
 	*/
-		this.suggestedFriendsPairs.add(p);
+		/*this.suggestedFriendsPairs.add(p);
 
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);		
 		ResultSet rst = stmt.executeQuery();
 		
 		// Close statement and result set
 		rst.close();
-		stmt.close();
+		stmt.close();*/
 	}
 	
 	
@@ -389,8 +389,24 @@ public class MyFakebookOracle extends FakebookOracle {
 		this.oldestFriend = new UserInfo(1L, "Oliver", "Oldham");
 		this.youngestFriend = new UserInfo(25L, "Yolanda", "Young");
 	*/
-		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery();
+		statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery("SELECT F.user_id1, F.user_id2, U.year_of_birth, U.first_name, U.last_name "
+		+ "FROM " + friendsTableName + " AS F "
+		+ "INNER JOIN " + userTableName + " AS U "
+		+ "ON F.user_id2=U.user_id "
+		+ "WHERE F.user_id1=" + user_id + " "
+		+ "ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC;"
+		);
+		
+		/*SELECT F.user_id1, F.user_id2, U.year_of_birth, U.first_name, U.last_name
+		FROM friendsTableName AS F
+		INNER JOIN userTableName AS U
+		ON F.user_id2 = U.user_id
+		WHERE F.user_id1 = user_id
+		ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC;*/
+		
+		
+		
 		
 		// Close statement and result set
 		rst.close();
@@ -410,12 +426,12 @@ public class MyFakebookOracle extends FakebookOracle {
 		this.popularCityNames.add("Ann Arbor");
 		this.popularCityNames.add("Ypsilanti");
 	*/
-		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		/*Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rst = stmt.executeQuery();
 		
 		// Close statement and result set
 		rst.close();
-		stmt.close();
+		stmt.close();*/
 	}
 	
 	
@@ -444,12 +460,12 @@ public class MyFakebookOracle extends FakebookOracle {
 		SiblingInfo s = new SiblingInfo(user1_id, user1FirstName, user1LastName, user2_id, user2FirstName, user2LastName);
 		this.siblings.add(s);
 	*/
-		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		/*Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rst = stmt.executeQuery();
 		
 		// Close statement and result set
 		rst.close();
-		stmt.close();
+		stmt.close();*/
 	}
 	
 }
