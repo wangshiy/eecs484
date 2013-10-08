@@ -327,6 +327,18 @@ public class MyFakebookOracle extends FakebookOracle {
 		/*Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		ResultSet rst = stmt.executeQuery();
 		
+		SELECT U1.user_id, U1.first_name, U1.last_name, U1.gender, U1.year_of_birth, U2.user_id, U2.first_name, U2.last_name, U2.gender, U2.year_of_birth
+		FROM userTableName AS U1, userTableName AS U2
+		WHERE U1.user_id, U2.user_id NOT EXISTS( SELECT * FROM friendsTableName AS F
+												WHERE F.user_id1 = U1.user_id AND F.user_id2 = U2.user_id)
+		AND U1.gender != U2.gender
+		AND ABS(U1.year_of_birth - U2.year_of_birth) < yearDiff;
+
+		SELECT T1.tag_photo_id, T1.tag_subject_id, T2.tag_photo_id, T2.tag_subject_id, COUNT(1)
+		FROM tagTableName AS T1, tagTableName T2
+		WHERE T1.tag_photo_id = T2.tag_photo_id
+		GROUP BY T1.tag_subject_id;
+		
 		// Close statement and result set
 		rst.close();
 		stmt.close();*/
@@ -444,6 +456,13 @@ public class MyFakebookOracle extends FakebookOracle {
 		+ "ON E.event_city_id=C.city_id "
 		+ "ORDER BY 1"
 		);
+		
+		int baseCount = rst.getInt(1);
+		while(rst.next()) {
+			if(rst.getInt(1) < baseCount) break;
+			this.eventCount = rst.getInt(1);
+			this.popularCityNames.add(rst.getString(2));
+		}
 		
 		// Close statement and result set
 		rst.close();
