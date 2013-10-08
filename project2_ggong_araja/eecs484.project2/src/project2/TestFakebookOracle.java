@@ -26,11 +26,11 @@ public class TestFakebookOracle {
 			fbwz.printMonthOfBirthInfo(out);
 			
 			// Query 1
-			/*fbwz.findNameInfo();
+			fbwz.findNameInfo();
 			fbwz.printNameInfo(out);
 			
 			// Query 2
-			fbwz.lonelyFriends();
+			/*fbwz.lonelyFriends();
 			fbwz.printLonelyFriends(out);
 			
 			// Query 3

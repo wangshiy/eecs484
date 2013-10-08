@@ -138,7 +138,10 @@ public class MyFakebookOracle extends FakebookOracle {
 	*/
 		
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery("select last_name "+userTableName+" where last_name is not null group by last_name order by length(last_name) desc");
+		ResultSet rst = stmt.executeQuery("select last_name "
+		+ "from " userTableName
+		+ " where last_name is not null "
+		+ "group by last_name order by length(last_name) desc");
 
 
 		// Iterate to the end of the table where the shortest last_name is
@@ -147,7 +150,6 @@ public class MyFakebookOracle extends FakebookOracle {
 			String LastName = rst.getString(1);
 			if (rst.isFirst()) {
 				baseString = LastName;
-				this.longestLastNames.add(LastName);
 			}
 			if(LastName.length() == baseString.length() ) {
 				this.longestLastNames.add(LastName);
@@ -159,7 +161,6 @@ public class MyFakebookOracle extends FakebookOracle {
 			String LastName = rst.getString(1);
 			if (rst.isLast()) {
 				baseString = LastName;
-				this.shortestLastNames.add(LastName);
 			}
 			if(LastName.length() == baseString.length() ) {
 				this.shortestLastNames.add(LastName);
