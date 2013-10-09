@@ -255,51 +255,55 @@ public class MyFakebookOracle extends FakebookOracle {
 		stmt.close();
 	}
 
-
-
 	@Override
 	// **** Query 4 ****
 	// Find the top-n photos based on the number of tagged users
 	// If there are ties, choose the photo with the smaller numeric PhotoID first
 	// 
 	public void findPhotosWithMostTags(int n) throws SQLException { 
-	/*
-		Do we need NOT NULL statements?
-	*/	
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-		ResultSet rst = stmt.executeQuery("SELECT count(T.tag_photo_id), T.tag_photo_id, P.photo_caption, P.photo_link, A.album_id, A.album_name, U.user_id, U.first_name, U.last_name from "
-				+ tagTableName + " T "
-				+ "INNER JOIN " + photoTableName + " P ON T.tag_photo_id=P.photo_id "
-				+ "INNER JOIN " + albumTableName + " A ON P.album_id=A.album_id "
-				+ "INNER JOIN" + userTableName + " U ON T.tag_subject_id=U.user_id "
-				+ "GROUP BY 1 "
-				+ "ORDER BY 1 DESC, T.tag_photo_id ASC");
-
+    ResultSet rst = stmt.executeQuery("SELECT base.tag_photo_id, T.tag_subject_id, P.photo_link, A.album_id, A.album_name, base.count, U.first_name, U.last_name "
+                + "FROM "
+	                  + "(SELECT tag_photo_id, count(tag_photo_id) as count FROM " + tagTableName
+	                  + " GROUP BY tag_photo_id "
+                    + "ORDER BY 2 DESC, 1 ASC) base "
+                + "FULL OUTER JOIN " + tagTableName + " T ON T.tag_photo_id=base.tag_photo_id "
+                + "FULL OUTER JOIN " + photoTableName + " P ON base.tag_photo_id=P.photo_id "
+                + "FULL OUTER JOIN " + albumTableName + " A ON P.album_id=A.album_id "
+                + "FULL OUTER JOIN " + userTableName + " U ON T.tag_subject_id=U.user_id");
 		
-		String previous_tag_photo_id = null;
+		String base = null;
+    rst.next();
+
+    // Get top n photos
 		for(int i = 0; i < n; i++){
-			String photoId = rst.getString(2);
-			String albumId = rst.getString(5);
-			String albumName = rst.getString(6);
-			String photoCaption = rst.getString(3);
-			String photoLink = rst.getString(4);
+			String photoId = rst.getString(1);
+			String userId = rst.getString(2);
+			String photoCaption = null;
+			String photoLink = rst.getString(3);
+			String albumId = rst.getString(4);
+			String albumName = rst.getString(5);
 			PhotoInfo p = new PhotoInfo(photoId, albumId, albumName, photoCaption, photoLink);
-			
+
 			// Get tagged users
 			TaggedPhotoInfo tp = new TaggedPhotoInfo(p);
-			previous_tag_photo_id = photoId;
+			base = photoId;
 			
-			while(rst.next()) {
-				photoId = rst.getString(2);
-				if(photoId != previous_tag_photo_id)
-					break;
-				long user_id = rst.getLong(7);
-				String first_name = rst.getString(8);
-				String last_name = rst.getString(9);
+		  do {
+        if(!photoId.equals(base) ) {
+          System.out.println(photoId + " BREAK " + base); 
+          break;
+        }
+
+				photoId = rst.getString(1);
+				long user_id = rst.getLong(2);
+				String first_name = rst.getString(7);
+				String last_name = rst.getString(8);
+        System.out.println(photoId + " " + user_id + " " + first_name + " " + last_name);
 				tp.addTaggedUser(new UserInfo(user_id, first_name, last_name));
 				this.photosWithMostTags.add(tp);
-			}
+			} while(rst.next());
 		}
 		
 		// Close statement and result set
