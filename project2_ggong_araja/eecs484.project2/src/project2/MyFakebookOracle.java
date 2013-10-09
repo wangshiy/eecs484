@@ -344,10 +344,6 @@ public class MyFakebookOracle extends FakebookOracle {
 		mp.addSharedPhoto(new PhotoInfo(sharedPhotoId, sharedPhotoAlbumId, 
 				sharedPhotoAlbumName, sharedPhotoCaption, sharedPhotoLink));
 		this.bestMatches.add(mp);
-	*/
-		
-		/*Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery();
 		
 		SELECT U1.user_id, U1.first_name, U1.last_name, U1.gender, U1.year_of_birth, U2.user_id, U2.first_name, U2.last_name, U2.gender, U2.year_of_birth
 		FROM userTableName AS U1, userTableName AS U2
@@ -356,14 +352,37 @@ public class MyFakebookOracle extends FakebookOracle {
 		AND U1.gender != U2.gender
 		AND ABS(U1.year_of_birth - U2.year_of_birth) < yearDiff;
 
-		SELECT T1.tag_photo_id, T1.tag_subject_id, T2.tag_photo_id, T2.tag_subject_id, COUNT(1)
-		FROM tagTableName AS T1, tagTableName T2
-		WHERE T1.tag_photo_id = T2.tag_photo_id
-		GROUP BY T1.tag_subject_id;
+    SELECT T1.tag_subject_id, T2.tag_subject_id, count(*)
+    FROM tagTableName T1, tagTableName T2
+		WHERE T1.tag_photo_id = T2.tag_photo_id AND T1.tag_subject_id != T2.tag_subject_id
+    GROUP BY T1.tag_subject_id, T2.tag_subject_id
+	*/
 		
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+		ResultSet rst = stmt.executeQuery("SELECT U1.user_id, U1.gender, U1.year_of_birth, U2.user_id, U2.gender, U2.year_of_birth, sharedPhotos.count "
+      + "FROM " + userTableName + " U1, " + userTableName + " U2 "
+      + "INNER JOIN (SELECT T1.tag_subject_id as tag1, T2.tag_subject_id as tag2, count(*) as count "
+          + "FROM " + tagTableName + " T1, " + tagTableName + " T2 "
+          + "WHERE T1.tag_photo_id = T2.tag_photo_id AND T1.tag_subject_id != T2.tag_subject_id "
+          + "GROUP BY T1.tag_subject_id, T2.tag_subject_id) sharedPhotos "
+      + "ON sharedPhotos.tag1=1, sharedPhotos.tag2=4 "
+      + "WHERE NOT EXISTS "
+          + "(SELECT * FROM " + friendsTableName + " F "
+				  + "WHERE (F.user1_id=U1.user_id AND F.user2_id=U2.user_id) OR (F.user2_id=U1.user_id AND F.user1_id=U2.user_id)) "
+      + "AND U1.gender != U2.gender "
+      + "AND ABS(U1.year_of_birth-U2.year_of_birth)<=" + yearDiff + " ");
+
+		//SHOULD IT BE <= OR < FOR YEARDIFF?????
+
+
+    while(rst.next()) {
+      System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3) + " " + rst.getString(4) + " " + rst.getString(5) + " " + rst.getString(6) + " " + rst.getInt(7));
+      //System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3));
+    }
+
 		// Close statement and result set
 		rst.close();
-		stmt.close();*/
+		stmt.close();
 	}
 
 	
