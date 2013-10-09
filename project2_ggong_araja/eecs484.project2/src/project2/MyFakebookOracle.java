@@ -344,48 +344,54 @@ public class MyFakebookOracle extends FakebookOracle {
 		mp.addSharedPhoto(new PhotoInfo(sharedPhotoId, sharedPhotoAlbumId, 
 				sharedPhotoAlbumName, sharedPhotoCaption, sharedPhotoLink));
 		this.bestMatches.add(mp);
-		
-		SELECT U1.user_id, U1.first_name, U1.last_name, U1.gender, U1.year_of_birth, U2.user_id, U2.first_name, U2.last_name, U2.gender, U2.year_of_birth
-		FROM userTableName AS U1, userTableName AS U2
-		WHERE U1.user_id, U2.user_id NOT EXISTS( SELECT * FROM friendsTableName AS F
-												WHERE F.user_id1 = U1.user_id AND F.user_id2 = U2.user_id)
-		AND U1.gender != U2.gender
-		AND ABS(U1.year_of_birth - U2.year_of_birth) < yearDiff;
-
-    SELECT T1.tag_subject_id, T2.tag_subject_id, count(*)
-    FROM tagTableName T1, tagTableName T2
-		WHERE T1.tag_photo_id = T2.tag_photo_id AND T1.tag_subject_id != T2.tag_subject_id
-    GROUP BY T1.tag_subject_id, T2.tag_subject_id
 	*/
 		
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery("SELECT U1.user_id, U1.gender, U1.year_of_birth, U2.user_id, U2.gender, U2.year_of_birth, sharedPhotos.count "
-      + "FROM " + userTableName + " U1, " + userTableName + " U2 "
-      + "INNER JOIN (SELECT T1.tag_subject_id as tag1, T2.tag_subject_id as tag2, count(*) as count "
-          + "FROM " + tagTableName + " T1, " + tagTableName + " T2 "
-          + "WHERE T1.tag_photo_id = T2.tag_photo_id AND T1.tag_subject_id != T2.tag_subject_id "
-          + "GROUP BY T1.tag_subject_id, T2.tag_subject_id) sharedPhotos "
-      + "ON sharedPhotos.tag1=1, sharedPhotos.tag2=4 "
-      + "WHERE NOT EXISTS "
-          + "(SELECT * FROM " + friendsTableName + " F "
-				  + "WHERE (F.user1_id=U1.user_id AND F.user2_id=U2.user_id) OR (F.user2_id=U1.user_id AND F.user1_id=U2.user_id)) "
-      + "AND U1.gender != U2.gender "
-      + "AND ABS(U1.year_of_birth-U2.year_of_birth)<=" + yearDiff + " ");
 
 		//SHOULD IT BE <= OR < FOR YEARDIFF?????
 
+    ResultSet rst = stmt.executeQuery("SELECT tagged.tagUser1, U1.first_name, U1.last_name, U1.year_of_birth, tagged.tagUser2, U2.first_name, U2.last_name, U2.year_of_birth, tagged.photoId, A.album_id, A.album_name, P.photo_caption, P.photo_link, tagged.count "
+        + "FROM (SELECT T1.tag_subject_id as tagUser1, T2.tag_subject_id as tagUser2, T1.tag_photo_id as photoId, count(*) as count "
+            + "FROM " + tagTableName + " T1, " + tagTableName + " T2 "
+            + "WHERE T1.tag_photo_id = T2.tag_photo_id AND T1.tag_subject_id != T2.tag_subject_id AND 3>0 "
+            + "GROUP BY T1.tag_subject_id, T2.tag_subject_id, T1.tag_photo_id ORDER BY count DESC) tagged "
+        + "FULL OUTER JOIN " + userTableName + " U1 ON tagged.tagUser1=U1.user_id "
+        + "FULL OUTER JOIN " + userTableName + " U2 ON tagged.tagUser2=U2.user_id "
+        + "FULL OUTER JOIN " + photoTableName + " P ON tagged.photoId=P.photo_id "
+        + "FULL OUTER JOIN " + albumTableName + " A on P.album_id=A.album_id "
+        + "WHERE tagged.tagUser1 IS NOT NULL AND tagged.tagUser2 IS NOT NULL AND U1.gender='female' AND U2.gender='male' AND ABS(U1.year_of_birth-U2.year_of_birth)<=" + yearDiff + " "
+        + "AND tagged.tagUser1 NOT IN(SELECT F.user1_id FROM " + friendsTableName + " F WHERE (tagged.tagUser1=F.user1_id AND tagged.tagUser2=F.user2_id) OR (tagged.tagUser1=F.user2_id AND tagged.tagUser2=F.user1_id)) "
+        + "ORDER BY tagged.count DESC, tagged.tagUser1 ASC, tagged.tagUser2 ASC");
 
-    while(rst.next()) {
-      System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3) + " " + rst.getString(4) + " " + rst.getString(5) + " " + rst.getString(6) + " " + rst.getInt(7));
-      //System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3));
+    for(int i = 0; i < n; i++) {
+      if(!rst.next()) break;
+      //System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3) + " " + rst.getString(4) + " " + rst.getString(5) + " " + rst.getString(6) + " " + rst.getString(7) 
+      //+ " " + rst.getString(8) + " " + rst.getString(9) + " " + rst.getString(10) + " " + rst.getString(11) + rst.getString(12) + " " + rst.getString(13) + " " + rst.getString(14)); 
+
+      Long girlUserId = rst.getLong(1);
+      String girlFirstName = rst.getString(2);
+      String girlLastName = rst.getString(3);
+      int girlYear = rst.getInt(4);
+      Long boyUserId = rst.getLong(5);
+      String boyFirstName = rst.getString(6);
+      String boyLastName = rst.getString(7);
+      int boyYear = rst.getInt(8);
+      MatchPair mp = new MatchPair(girlUserId, girlFirstName, girlLastName, 
+		      girlYear, boyUserId, boyFirstName, boyLastName, boyYear);
+      String sharedPhotoId = rst.getString(9);
+      String sharedPhotoAlbumId = rst.getString(10);
+      String sharedPhotoAlbumName = rst.getString(11);
+      String sharedPhotoCaption = rst.getString(12);
+      String sharedPhotoLink = rst.getString(13);
+      mp.addSharedPhoto(new PhotoInfo(sharedPhotoId, sharedPhotoAlbumId, 
+		      sharedPhotoAlbumName, sharedPhotoCaption, sharedPhotoLink));
+      this.bestMatches.add(mp);
     }
 
 		// Close statement and result set
 		rst.close();
 		stmt.close();
 	}
-
-	
 	
 	// **** Query 6 ****
 	// Suggest friends based on mutual friends
