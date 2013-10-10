@@ -42,15 +42,15 @@ public class TestFakebookOracle {
 			fbwz.printPhotosWithMostTags(out);*/
 			
 			// Query 5
-			fbwz.matchMaker(5,2);
-			fbwz.printBestMatches(out);
+			//fbwz.matchMaker(5,2);
+			//fbwz.printBestMatches(out);
 			
 			// Query 6	
-			/*fbwz.suggestFriendsByMutualFriends(5);
+			fbwz.suggestFriendsByMutualFriends(5);
 			fbwz.printMutualFriendsInfo(out);
 			
 			// Query 7
-			fbwz.findAgeInfo(215L);
+			/*fbwz.findAgeInfo(215L);
 			fbwz.printAgeInfo(out);
 			
 			// Query 8
