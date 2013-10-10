@@ -540,11 +540,32 @@ public class MyFakebookOracle extends FakebookOracle {
 		SiblingInfo s = new SiblingInfo(user1_id, user1FirstName, user1LastName, user2_id, user2FirstName, user2LastName);
 		this.siblings.add(s);
 	*/
-		/*Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery();
-		
-		// Close statement and result set
+		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+
+        ResultSet rst = stmt.executeQuery("SELECT U1.user_id, U1.first_name, U1.last_name, U2.user_id, U2.first_name, U2.last_name" +
+                						  " FROM  " + friendsTableName + " F, " + userTableName + " U1, " + userTableName + " U2," +
+				                          		hometownCityTableName + " H1, " + hometownCityTableName + " H2" +
+							              " WHERE F.user1_id = U1.user_id AND F.user2_id = U2.user_id AND " +
+			                					" H1.user_id = U1.user_id AND H2.user_id = U2.user_id AND " +
+			                					" U1.last_name = U2.last_name AND " +
+			                					" H1.hometown_city_id = H2.hometown_city_id AND " +
+			                					" ABS(U1.year_of_birth - U2.year_of_birth) < 10 " +
+		                				  " ORDER BY U1.user_id ASC, U2.user_id ASC"
+                );
+
+        while(rst.next()) {
+            Long user1_id = rst.getLong(1);
+            String user1FirstName = rst.getString(2);
+            String user1LastName = rst.getString(3);
+            Long user2_id = rst.getLong(4);
+            String user2FirstName = rst.getString(5);
+            String user2LastName = rst.getString(6);
+		    SiblingInfo s = new SiblingInfo(user1_id, user1FirstName, user1LastName, user2_id, user2FirstName, user2LastName);
+	    	this.siblings.add(s);
+        }
+
+
 		rst.close();
-		stmt.close();*/
+		stmt.close();
 	}
 }
