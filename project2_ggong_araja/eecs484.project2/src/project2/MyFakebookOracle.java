@@ -449,28 +449,88 @@ public class MyFakebookOracle extends FakebookOracle {
 		WHERE F.user_id1 = user_id
 		ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC;
 	*/
+	/*
+			Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			ResultSet rst = stmt.executeQuery("SELECT F.user_id1, F.user_id2, U.year_of_birth, U.first_name, U.last_name "
+			+ " FROM " + friendsTableName + " AS F "
+			+ " INNER JOIN " + userTableName + " AS U "
+			+ " ON F.user_id2=U.user_id "
+			+ " WHERE F.user_id1 = user_id "
+			+ " ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC"
+			);
+			
+			while(rst.next()) {
+				long userId = rst.getLong(2);
+				String firstName = rst.getString(3);
+				String lastName = rst.getString(4);
+				this.oldestFriend = new UserInfo(userId, firstName, lastName);
+				this.youngestFriend = new UserInfo(25L, "Yolanda", "Young");
+			}
+			if(rst.previous()) {
+				long userId = rst.getLong(2);
+				String firstName = rst.getString(3);
+				String lastName = rst.getString(4);
+				this.youngestFriend = new UserInfo(userId, firstName, lastName);
+			}
+	*/
+	
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery("SELECT F.user_id1, F.user_id2, U.year_of_birth, U.first_name, U.last_name "
-		+ "FROM " + friendsTableName + " AS F "
-		+ "INNER JOIN " + userTableName + " AS U "
-		+ "ON F.user_id2=U.user_id "
-		+ "WHERE F.user_id1=" + user_id + " "
-		+ "ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC"
+		ResultSet rst = stmt.executeQuery(
+				"SELECT U.user_id, U.first_name, U.last_name, U.year_of_birth FROM" +
+				" (SELECT U.user_id, U.first_name, U.last_name, U.year_of_birth" +
+				"  FROM " + userTableName + " U, " +
+				"     ((SELECT user2_id friend_id FROM " + friendsTableName + " WHERE user1_id = "+user_id+") UNION" +
+				"      (SELECT user1_id friend_id FROM " + friendsTableName + " WHERE user2_id = "+user_id+")" +
+				"      ) F" +
+				"  WHERE U.user_id = F.friend_id" +
+				"  ORDER BY U.year_of_birth DESC, U.month_of_birth ASC, U.day_of_birth ASC, U.user_id DESC) u" +
+				" WHERE ROWNUM <= 1"
 		);
-		
+
+		// if(rst.next()) {
+		// 	this.oldestFriend = new UserInfo(rst.getLong(1), rst.getString(2), rst.getString(3));
+		// }
+
+		// rst = stmt.executeQuery(
+		// 		"SELECT u.user_id, u.first_name, u.last_name FROM" +
+		// 		" (SELECT u.user_id, u.first_name, u.last_name" +
+		// 		"  FROM " + userTableName + " u, " +
+		// 		"     ((SELECT user2_id friend_id FROM " + friendsTableName + " WHERE user1_id = "+user_id+") UNION" +
+		// 		"      (SELECT user1_id friend_id FROM " + friendsTableName + " WHERE user2_id = "+user_id+")" +
+		// 		"      ) f" +
+		// 		"  WHERE u.user_id = f.friend_id" +
+		// 		"  ORDER BY u.year_of_birth DESC, u.month_of_birth DESC, u.day_of_birth DESC, u.user_id ASC) u" +
+		// 		" WHERE ROWNUM <= 1"
+		// );
+
+		// if(rst.next()) {
+		// 	this.youngestFriend = new UserInfo(rst.getLong(1), rst.getString(2), rst.getString(3));
+		// }
+
+
+		int baseInt = 0;
 		while(rst.next()) {
-			long userId = rst.getLong(2);
-			String firstName = rst.getString(3);
-			String lastName = rst.getString(4);
-			this.oldestFriend = new UserInfo(userId, firstName, lastName);
-			this.youngestFriend = new UserInfo(25L, "Yolanda", "Young");
+			int YearofBirth = rst.getInt(4);
+			if (rst.isFirst()) {
+				baseInt = YearofBirth;
+			}
+			if(YearofBirth == baseInt) {
+				this.oldestFriend = new UserInfo(rst.getLong(1), rst.getString(2), rst.getString(3));
+			}
 		}
-		if(rst.previous()) {
-			long userId = rst.getLong(2);
-			String firstName = rst.getString(3);
-			String lastName = rst.getString(4);
-			this.youngestFriend = new UserInfo(userId, firstName, lastName);
-		}
+		
+		// Iterate back from the end until a last_name longer than the shortest last_name is encountered
+		while(rst.previous()) {
+			int YearofBirth = rst.getInt(4);
+			if (rst.isLast()) {
+				baseInt = YearofBirth;
+			}
+			if(YearofBirth == baseInt) {
+				this.youngestFriend = new UserInfo(rst.getLong(1), rst.getString(2), rst.getString(3));
+			}
+			else break;
+		}	
+
 		
 		// Close statement and result set
 		rst.close();
@@ -497,16 +557,14 @@ public class MyFakebookOracle extends FakebookOracle {
 	*/
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		
-		ResultSet rst = stmt.executeQuery("SELECT count(E.event_city_id), C.city_name "
-		+ "FROM " + eventTableName + " AS E "
-		+ "INNER JOIN " + cityTableName + " AS C "
-		+ "ON E.event_city_id=C.city_id "
-		+ "ORDER BY 1"
+		ResultSet rst = stmt.executeQuery("SELECT COUNT(E.event_city_id), C.city_name"
+		+ " FROM " + eventTableName + " E, " + cityTableName + " C" 
+		+ " WHERE E.event_city_id = C.city_id" 
+		+ " GROUP BY C.city_name" 
+		+ " HAVING COUNT(E.event_id) = (SELECT MAX(COUNT(*)) FROM " + eventTableName + " GROUP BY event_city_id)"
 		);
 		
-		int baseCount = rst.getInt(1);
 		while(rst.next()) {
-			if(rst.getInt(1) < baseCount) break;
 			this.eventCount = rst.getInt(1);
 			this.popularCityNames.add(rst.getString(2));
 		}
@@ -542,16 +600,11 @@ public class MyFakebookOracle extends FakebookOracle {
 	*/
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-        ResultSet rst = stmt.executeQuery("SELECT U1.user_id, U1.first_name, U1.last_name, U2.user_id, U2.first_name, U2.last_name" +
-                						  " FROM  " + friendsTableName + " F, " + userTableName + " U1, " + userTableName + " U2," +
-				                          		hometownCityTableName + " H1, " + hometownCityTableName + " H2" +
-							              " WHERE F.user1_id = U1.user_id AND F.user2_id = U2.user_id AND " +
-			                					" H1.user_id = U1.user_id AND H2.user_id = U2.user_id AND " +
-			                					" U1.last_name = U2.last_name AND " +
-			                					" H1.hometown_city_id = H2.hometown_city_id AND " +
-			                					" ABS(U1.year_of_birth - U2.year_of_birth) < 10 " +
-		                				  " ORDER BY U1.user_id ASC, U2.user_id ASC"
-                );
+        ResultSet rst = stmt.executeQuery("SELECT U1.user_id, U1.first_name, U1.last_name, U2.user_id, U2.first_name, U2.last_name" 
+        + " FROM " + friendsTableName + " F, " + userTableName + " U1, " + userTableName + " U2," + hometownCityTableName + " H1, " + hometownCityTableName + " H2" 
+        + " WHERE F.user1_id = U1.user_id AND F.user2_id = U2.user_id AND " + " H1.user_id = U1.user_id AND H2.user_id = U2.user_id AND " + " U1.last_name = U2.last_name AND " + " H1.hometown_city_id = H2.hometown_city_id AND " + " ABS(U1.year_of_birth - U2.year_of_birth) < 10"
+        + " ORDER BY U1.user_id ASC, U2.user_id ASC"
+        );
 
         while(rst.next()) {
             Long user1_id = rst.getLong(1);

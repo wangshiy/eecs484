@@ -48,15 +48,15 @@ public class TestFakebookOracle {
 			// Query 6	
 			/*fbwz.suggestFriendsByMutualFriends(5);
 			fbwz.printMutualFriendsInfo(out);
+			*/
 			
 			// Query 7
 			fbwz.findAgeInfo(215L);
 			fbwz.printAgeInfo(out);
-			
 			// Query 8
 			fbwz.findEventCities();
 			fbwz.printCityNames(out);
-			*/
+			
 			
 			// Query 9
 			fbwz.findPotentialSiblings();
