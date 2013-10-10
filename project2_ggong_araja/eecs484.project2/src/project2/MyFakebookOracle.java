@@ -358,14 +358,14 @@ public class MyFakebookOracle extends FakebookOracle {
         + "FULL OUTER JOIN " + photoTableName + " P ON tagged.photoId=P.photo_id "
         + "FULL OUTER JOIN " + albumTableName + " A on P.album_id=A.album_id "
         + "WHERE tagged.tagUser1 IS NOT NULL AND tagged.tagUser2 IS NOT NULL AND U1.gender='female' AND U2.gender='male' AND ABS(U1.year_of_birth-U2.year_of_birth)<=" + yearDiff + " "
-        + "AND tagged.tagUser1 NOT IN(SELECT F.user1_id FROM " + friendsTableName + " F WHERE (tagged.tagUser1=F.user1_id AND tagged.tagUser2=F.user2_id) OR (tagged.tagUser1=F.user2_id AND tagged.tagUser2=F.user1_id)) "
+        + "AND tagged.tagUser1 NOT IN ( "
+            + "SELECT F.user1_id FROM " + friendsTableName + " F "
+            + "WHERE (tagged.tagUser1=F.user1_id AND tagged.tagUser2=F.user2_id) OR (tagged.tagUser1=F.user2_id AND tagged.tagUser2=F.user1_id)) "
         + "ORDER BY tagged.count DESC, tagged.tagUser1 ASC, tagged.tagUser2 ASC");
 
     for(int i = 0; i < n; i++) {
       if(!rst.next()) break;
 
-      //System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3) + " " + rst.getString(4) + " " + rst.getString(5) + " " + rst.getString(6) + " " + rst.getString(7) 
-      //+ " " + rst.getString(8) + " " + rst.getString(9) + " " + rst.getString(10) + " " + rst.getString(11) + rst.getString(12) + " " + rst.getString(13) + " " + rst.getString(14)); 
       Long girlUserId = rst.getLong(1);
       String girlFirstName = rst.getString(2);
       String girlLastName = rst.getString(3);
@@ -423,100 +423,73 @@ public class MyFakebookOracle extends FakebookOracle {
 
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);		
 
-      // LIST OF MUTUAL FRIENDS
-      /*ResultSet rst = stmt.executeQuery("SELECT F1.user1_id, F2.user1_id, F2.user2_id "
-      + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-      + "WHERE (F1.user1_id=254 AND F2.user1_id=531 AND F1.user2_id=F2.user2_id) "
-      + "UNION ALL "
-      + "SELECT F1.user1_id, F2.user2_id, F2.user1_id "
-      + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-      + "WHERE (F1.user1_id=254 AND F2.user2_id=531 AND F1.user2_id=F2.user1_id) "
-      + "UNION ALL "
-      + "SELECT F1.user2_id, F2.user2_id, F2.user1_id "
-      + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-      + "WHERE (F1.user2_id=254 AND F2.user2_id=531 AND F1.user1_id=F2.user1_id) "
-      + "ORDER BY 3 ASC"
-      );*/
+    ResultSet rst = stmt.executeQuery("SELECT mutualFriends.user1, U1.first_name, U1.last_name, mutualFriends.user2, U2.first_name, U2.last_name, mutualList.user3, U3.first_name, U3.last_name, mutualFriends.count "
+      + "FROM ( "
+          + "SELECT mutual.person1 as user1, mutual.person2 as user2, count(*) as count FROM "
+              + "(SELECT F1.user1_id as person1, F2.user1_id as person2, F2.user2_id as person3 "
+              + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
+              + "WHERE F1.user2_id=F2.user2_id AND F1.user1_id!=F2.user1_id "
+              + "UNION ALL "
+              + "SELECT F1.user1_id as person1, F2.user2_id as person2, F2.user1_id as person3 "
+              + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
+              + "WHERE F1.user2_id=F2.user1_id AND F1.user1_id!=F2.user2_id "
+              + "UNION ALL "
+              + "SELECT F1.user2_id as person1, F2.user2_id as person2, F2.user1_id as person3 "
+              + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
+              + "WHERE F1.user1_id=F2.user1_id AND F1.user2_id!=F2.user2_id "
+              + "ORDER BY 3 ASC) mutual "
+          + "GROUP BY mutual.person1, mutual.person2 ORDER BY 3 DESC) mutualFriends "
+      + "FULL OUTER JOIN ( "
+          + "SELECT F1.user1_id as user1, F2.user1_id as user2, F2.user2_id as user3 "
+              + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
+              + "WHERE F1.user2_id=F2.user2_id AND F1.user1_id!=F2.user1_id "
+              + "UNION ALL "
+              + "SELECT F1.user1_id, F2.user2_id, F2.user1_id "
+              + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
+              + "WHERE F1.user2_id=F2.user1_id AND F1.user1_id!=F2.user2_id "
+              + "UNION ALL "
+              + "SELECT F1.user2_id, F2.user2_id, F2.user1_id "
+              + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
+              + "WHERE F1.user1_id=F2.user1_id AND F1.user2_id!=F2.user2_id "
+              + "ORDER BY 3 ASC) mutualList "
+      + "ON mutualFriends.user1=mutualList.user1 AND mutualFriends.user2=mutualList.user2 "
+      + "FULL OUTER JOIN " + userTableName + " U1 ON U1.user_id=mutualFriends.user1 "
+      + "FULL OUTER JOIN " + userTableName + " U2 ON U2.user_id=mutualFriends.user2 "
+      + "FULL OUTER JOIN " + userTableName + " U3 ON U3.user_id=mutualList.user3 "
+      + "WHERE mutualFriends.user1<mutualFriends.user2 AND mutualFriends.user1 NOT IN ( "
+            + "SELECT F.user1_id FROM " + friendsTableName + " F "
+            + "WHERE (mutualFriends.user1=F.user1_id AND mutualFriends.user2=F.user2_id)) "
+      + "ORDER BY mutualFriends.count DESC, mutualFriends.user1 ASC, mutualFriends.user2 ASC, mutualList.user3 ASC"
+    );
 
-      // COUNT OF MUTUAL FRIENDS
-      /*ResultSet rst = stmt.executeQuery("SELECT mutual.person1, mutual.person2, count(*) FROM "
-          + "(SELECT F1.user1_id as person1, F2.user1_id as person2, F2.user2_id as person3 "
-          + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-          + "WHERE (F1.user1_id=254 AND F2.user1_id=531 AND F1.user2_id=F2.user2_id) "
-          + "UNION ALL "
-          + "SELECT F1.user1_id as person1, F2.user2_id as person2, F2.user1_id as person3 "
-          + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-          + "WHERE (F1.user1_id=254 AND F2.user2_id=531 AND F1.user2_id=F2.user1_id) "
-          + "UNION ALL "
-          + "SELECT F1.user2_id as person1, F2.user2_id as person2, F2.user1_id as person3 "
-          + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-          + "WHERE (F1.user2_id=254 AND F2.user2_id=531 AND F1.user1_id=F2.user1_id) "
-          + "ORDER BY 3 ASC) mutual "
-      + "GROUP BY mutual.person1, mutual.person2 ORDER BY 3 DESC"
-      );*/
+    Long base1_id = null;
+    Long base2_id = null;
+    rst.next();
+    for(int i = 0; i < n; i++) {
+      // Get friend pair
+		  Long user1_id = rst.getLong(1);
+	    String user1FirstName = rst.getString(2);
+	    String user1LastName = rst.getString(3);
+	    Long user2_id = rst.getLong(4);
+	    String user2FirstName = rst.getString(5);
+	    String user2LastName = rst.getString(6);
+	    FriendsPair p = new FriendsPair(user1_id, user1FirstName, user1LastName, user2_id, user2FirstName, user2LastName);
+      
+      base1_id = user1_id;
+      base2_id = user2_id;
 
-      // BEST QUERY EVER
-      /*ResultSet rst = stmt.executeQuery("SELECT mutualFriends.user1, mutualFriends.user2, mutualFriends.count "
-        + "FROM ( "
-            + "SELECT mutual.person1 as user1, mutual.person2 as user2, count(*) as count FROM "
-                + "(SELECT F1.user1_id as person1, F2.user1_id as person2, F2.user2_id as person3 "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user2_id=F2.user2_id AND F1.user1_id!=F2.user1_id "
-                + "UNION ALL "
-                + "SELECT F1.user1_id as person1, F2.user2_id as person2, F2.user1_id as person3 "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user2_id=F2.user1_id AND F1.user1_id!=F2.user2_id "
-                + "UNION ALL "
-                + "SELECT F1.user2_id as person1, F2.user2_id as person2, F2.user1_id as person3 "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user1_id=F2.user1_id AND F1.user2_id!=F2.user2_id "
-                + "ORDER BY 3 ASC) mutual "
-            + "GROUP BY mutual.person1, mutual.person2 ORDER BY 3 DESC) mutualFriends "
-        + "WHERE mutualFriends.user1<mutualFriends.user2 "
-        + "ORDER BY 3 DESC, 1 ASC, 2 ASC"
-      );*/
+      // Get shared friends
+      do {
+        user1_id = rst.getLong(1);
+        user2_id = rst.getLong(4);
+        if(!user1_id.equals(base1_id) || !user2_id.equals(base2_id)) break;
 
-      ResultSet rst = stmt.executeQuery("SELECT mutualFriends.user1, mutualFriends.user2, mutualList.user3, mutualFriends.count "
-        + "FROM ( "
-            + "SELECT mutual.person1 as user1, mutual.person2 as user2, count(*) as count FROM "
-                + "(SELECT F1.user1_id as person1, F2.user1_id as person2, F2.user2_id as person3 "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user2_id=F2.user2_id AND F1.user1_id!=F2.user1_id "
-                + "UNION ALL "
-                + "SELECT F1.user1_id as person1, F2.user2_id as person2, F2.user1_id as person3 "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user2_id=F2.user1_id AND F1.user1_id!=F2.user2_id "
-                + "UNION ALL "
-                + "SELECT F1.user2_id as person1, F2.user2_id as person2, F2.user1_id as person3 "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user1_id=F2.user1_id AND F1.user2_id!=F2.user2_id "
-                + "ORDER BY 3 ASC) mutual "
-            + "GROUP BY mutual.person1, mutual.person2 ORDER BY 3 DESC) mutualFriends "
-        + "FULL OUTER JOIN ( "
-            + "SELECT F1.user1_id as user1, F2.user1_id as user2, F2.user2_id as user3 "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user2_id=F2.user2_id AND F1.user1_id!=F2.user1_id "
-                + "UNION ALL "
-                + "SELECT F1.user1_id, F2.user2_id, F2.user1_id "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user2_id=F2.user1_id AND F1.user1_id!=F2.user2_id "
-                + "UNION ALL "
-                + "SELECT F1.user2_id, F2.user2_id, F2.user1_id "
-                + "FROM " + friendsTableName + " F1, " + friendsTableName + " F2 "
-                + "WHERE F1.user1_id=F2.user1_id AND F1.user2_id!=F2.user2_id "
-                + "ORDER BY 3 ASC) mutualList "
-        + "ON mutualFriends.user1=mutualList.user1 AND mutualFriends.user2=mutualList.user2 "
-        + "WHERE mutualFriends.user1<mutualFriends.user2 "
-        + "ORDER BY 4 DESC, 1 ASC, 2 ASC"
-      );
-
-    for(int i = 0; i < 200; i++) {
-      if(!rst.next()) break;
-      //System.out.println(rst.getString(1));
-      //System.out.println(rst.getString(1) + " " + rst.getString(2));
-      //System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3));
-      System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3) + " " + rst.getString(4));
-      //System.out.println(rst.getString(1) + " " + rst.getString(2) + " " + rst.getString(3) + " " + rst.getString(4) + " " + rst.getString(5));
+        Long sharedFriendId = rst.getLong(7);
+        String sharedFriendFirstName = rst.getString(8);
+        String sharedFriendLastName = rst.getString(9);
+		    p.addSharedFriend(sharedFriendId, sharedFriendFirstName, sharedFriendLastName);
+		    this.suggestedFriendsPairs.add(p);
+      } while(rst.next());
     }
 
 		// Close statement and result set
