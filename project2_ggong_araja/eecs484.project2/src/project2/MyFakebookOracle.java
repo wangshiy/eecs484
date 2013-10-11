@@ -207,7 +207,7 @@ public class MyFakebookOracle extends FakebookOracle {
 		this.countLonelyFriends = 2;
 	*/
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery("select U.user_id, U.first_name, U.last_name from "+ userTableName +" U where U.user_id not in (select distinct U.user1_id from " + friendsTableName + " union select distinct U.user2_id from "+ friendsTableName + ")");
+		ResultSet rst = stmt.executeQuery("select U.user_id, U.first_name, U.last_name from "+ userTableName +" U where U.user_id not in (select distinct F.user1_id from " + friendsTableName + " F union select distinct F.user2_id from "+ friendsTableName + " F)");
 
 		this.countLonelyFriends = 0;
 		while(rst.next()){	//read individual users
@@ -498,7 +498,7 @@ public class MyFakebookOracle extends FakebookOracle {
 	}
 	
 	
-	//@Override
+	@Override
 	// ***** Query 7 *****
 	// Given the ID of a user, find information about that
 	// user's oldest friend and youngest friend
@@ -507,96 +507,48 @@ public class MyFakebookOracle extends FakebookOracle {
 	// on the same day, then assume that the one with the larger user_id is older
 	//
 	public void findAgeInfo(Long user_id) throws SQLException {
-	/*
-		SELECT F.user_id1, F.user_id2, U.first_name, U.last_name, U.year_of_birth, U.first_name, U.last_name
-		FROM friendsTableName AS F
-		INNER JOIN userTableName AS U
-		ON F.user_id2 = U.user_id
-		WHERE F.user_id1 = user_id
-		ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC;
-	*/
-	/*
-			Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-			ResultSet rst = stmt.executeQuery("SELECT F.user_id1, F.user_id2, U.year_of_birth, U.first_name, U.last_name "
-			+ " FROM " + friendsTableName + " AS F "
-			+ " INNER JOIN " + userTableName + " AS U "
-			+ " ON F.user_id2=U.user_id "
-			+ " WHERE F.user_id1 = user_id "
-			+ " ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U,day_of_birth DESC, U.user_id DESC"
-			);
-			
-			while(rst.next()) {
-				long userId = rst.getLong(2);
-				String firstName = rst.getString(3);
-				String lastName = rst.getString(4);
-				this.oldestFriend = new UserInfo(userId, firstName, lastName);
-				this.youngestFriend = new UserInfo(25L, "Yolanda", "Young");
-			}
-			if(rst.previous()) {
-				long userId = rst.getLong(2);
-				String firstName = rst.getString(3);
-				String lastName = rst.getString(4);
-				this.youngestFriend = new UserInfo(userId, firstName, lastName);
-			}
-	*/
-	
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		ResultSet rst = stmt.executeQuery(
-				"SELECT U.user_id, U.first_name, U.last_name, U.year_of_birth FROM" +
-				" (SELECT U.user_id, U.first_name, U.last_name, U.year_of_birth" +
-				"  FROM " + userTableName + " U, " +
-				"     ((SELECT user2_id friend_id FROM " + friendsTableName + " WHERE user1_id = "+user_id+") UNION" +
-				"      (SELECT user1_id friend_id FROM " + friendsTableName + " WHERE user2_id = "+user_id+")" +
-				"      ) F" +
-				"  WHERE U.user_id = F.friend_id" +
-				"  ORDER BY U.year_of_birth DESC, U.month_of_birth ASC, U.day_of_birth ASC, U.user_id DESC) u" +
-				" WHERE ROWNUM <= 1"
+
+    UserInfo youngest = null;
+    UserInfo oldest = null;
+
+    // Get oldest friend
+		ResultSet rst = stmt.executeQuery("SELECT friends.person1, friends.person2, U.first_name, U.last_name, U.day_of_birth, U.month_of_birth, U.year_of_birth "
+    + "FROM ("
+      + "SELECT F.user1_id as person1, F.user2_id as person2 "
+      + "FROM " + friendsTableName + " F "
+      + "WHERE F.user1_id=" + user_id + " "
+      + "UNION ALL "
+      + "SELECT F.user2_id as person1, F.user1_id as person2 "
+      + "FROM " + friendsTableName + " F "
+      + "WHERE F.user2_id=" + user_id + ") friends "
+    + "INNER JOIN " + userTableName + " U ON friends.person2=U.user_id "
+    + "ORDER BY U.year_of_birth ASC, U.month_of_birth ASC, U.day_of_birth ASC, friends.person2 DESC"
 		);
 
-		// if(rst.next()) {
-		// 	this.oldestFriend = new UserInfo(rst.getLong(1), rst.getString(2), rst.getString(3));
-		// }
+    if(rst.next() ) {
+      oldest = new UserInfo(rst.getLong(2), rst.getString(3), rst.getString(4));
+      this.oldestFriend = oldest;
+    }
 
-		// rst = stmt.executeQuery(
-		// 		"SELECT u.user_id, u.first_name, u.last_name FROM" +
-		// 		" (SELECT u.user_id, u.first_name, u.last_name" +
-		// 		"  FROM " + userTableName + " u, " +
-		// 		"     ((SELECT user2_id friend_id FROM " + friendsTableName + " WHERE user1_id = "+user_id+") UNION" +
-		// 		"      (SELECT user1_id friend_id FROM " + friendsTableName + " WHERE user2_id = "+user_id+")" +
-		// 		"      ) f" +
-		// 		"  WHERE u.user_id = f.friend_id" +
-		// 		"  ORDER BY u.year_of_birth DESC, u.month_of_birth DESC, u.day_of_birth DESC, u.user_id ASC) u" +
-		// 		" WHERE ROWNUM <= 1"
-		// );
+    // Get youngest friend
+		rst = stmt.executeQuery("SELECT friends.person1, friends.person2, U.first_name, U.last_name, U.day_of_birth, U.month_of_birth, U.year_of_birth "
+    + "FROM ("
+      + "SELECT F.user1_id as person1, F.user2_id as person2 "
+      + "FROM " + friendsTableName + " F "
+      + "WHERE F.user1_id=" + user_id + " "
+      + "UNION ALL "
+      + "SELECT F.user2_id as person1, F.user1_id as person2 "
+      + "FROM " + friendsTableName + " F "
+      + "WHERE F.user2_id=" + user_id + ") friends "
+    + "INNER JOIN " + userTableName + " U ON friends.person2=U.user_id "
+    + "ORDER BY U.year_of_birth DESC, U.month_of_birth DESC, U.day_of_birth DESC, friends.person2 ASC"
+		);
 
-		// if(rst.next()) {
-		// 	this.youngestFriend = new UserInfo(rst.getLong(1), rst.getString(2), rst.getString(3));
-		// }
-
-
-		int baseInt = 0;
-		while(rst.next()) {
-			int YearofBirth = rst.getInt(4);
-			if (rst.isFirst()) {
-				baseInt = YearofBirth;
-			}
-			if(YearofBirth == baseInt) {
-				this.oldestFriend = new UserInfo(rst.getLong(1), rst.getString(2), rst.getString(3));
-			}
-		}
-		
-		// Iterate back from the end until a last_name longer than the shortest last_name is encountered
-		while(rst.previous()) {
-			int YearofBirth = rst.getInt(4);
-			if (rst.isLast()) {
-				baseInt = YearofBirth;
-			}
-			if(YearofBirth == baseInt) {
-				this.youngestFriend = new UserInfo(rst.getLong(1), rst.getString(2), rst.getString(3));
-			}
-			else break;
-		}	
-
+    if(rst.next() ) {
+      youngest = new UserInfo(rst.getLong(2), rst.getString(3), rst.getString(4));
+      this.youngestFriend = youngest;
+    }
 		
 		// Close statement and result set
 		rst.close();
@@ -611,23 +563,6 @@ public class MyFakebookOracle extends FakebookOracle {
 	// events in that city.  If there is a tie, return the names of all of the (tied) cities.
 	//
 	public void findEventCities() throws SQLException {
-	/*
-		SELECT count(E.event_city_id), C.city_nameSELECT *
-FROM (SELECT *
-  FROM friendsTableName
-  WHERE user_id = person1) F1
-INNER JOIN (SELECT *
-  FROM friendsTableName
-  WHERE user_id = person2) F2)
-
-		FROM eventTableName AS E
-		INNER JOIN cityTableName as C
-		ON E.event_city_id=C.city_id
-		ORDER BY 1;
-		this.eventCount = 12;
-		this.popularCityNames.add("Ann Arbor");
-		this.popularCityNames.add("Ypsilanti");
-	*/
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		
 		ResultSet rst = stmt.executeQuery("SELECT COUNT(E.event_city_id), C.city_name"

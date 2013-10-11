@@ -30,12 +30,12 @@ public class TestFakebookOracle {
 			fbwz.printNameInfo(out);
 			
 			// Query 2
-			//fbwz.lonelyFriends();
-			//fbwz.printLonelyFriends(out);
+			fbwz.lonelyFriends();
+			fbwz.printLonelyFriends(out);
 			
 			// Query 3
-			// fbwz.liveAtHome();
-			// fbwz.printLiveAtHome(out);
+		 fbwz.liveAtHome();
+			 fbwz.printLiveAtHome(out);
 			
 			//Query 4
 			fbwz.findPhotosWithMostTags(5);
@@ -50,17 +50,16 @@ public class TestFakebookOracle {
 			fbwz.printMutualFriendsInfo(out);
 			
 			// Query 7
-			/*fbwz.findAgeInfo(215L);
+			fbwz.findAgeInfo(215L);
 			fbwz.printAgeInfo(out);
+
 			// Query 8
 			fbwz.findEventCities();
-			fbwz.printCityNames(out);*/
-			
+			fbwz.printCityNames(out);			
 			
 			// Query 9
 			fbwz.findPotentialSiblings();
 			fbwz.printPotentialSiblings(out);
-			
 			
 			conn.close();
 		} catch (SQLException e) {
