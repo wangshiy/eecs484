@@ -22,12 +22,12 @@ public class TestFakebookOracle {
 			OutputStreamWriter out = new OutputStreamWriter(System.out);
 			
 			// Query 0
-			//fbwz.findMonthOfBirthInfo();
-			//fbwz.printMonthOfBirthInfo(out);
+			fbwz.findMonthOfBirthInfo();
+			fbwz.printMonthOfBirthInfo(out);
 			
 			// Query 1
-			//fbwz.findNameInfo();
-			//bwz.printNameInfo(out);
+			fbwz.findNameInfo();
+			fbwz.printNameInfo(out);
 			
 			// Query 2
 			//fbwz.lonelyFriends();
@@ -38,8 +38,8 @@ public class TestFakebookOracle {
 			// fbwz.printLiveAtHome(out);
 			
 			//Query 4
-			// fbwz.findPhotosWithMostTags(5);
-			// fbwz.printPhotosWithMostTags(out);
+			fbwz.findPhotosWithMostTags(5);
+			fbwz.printPhotosWithMostTags(out);
 			
 			// Query 5
 			fbwz.matchMaker(5,2);
@@ -54,12 +54,12 @@ public class TestFakebookOracle {
 			fbwz.printAgeInfo(out);
 			// Query 8
 			fbwz.findEventCities();
-			fbwz.printCityNames(out);
+			fbwz.printCityNames(out);*/
 			
 			
 			// Query 9
 			fbwz.findPotentialSiblings();
-			fbwz.printPotentialSiblings(out);*/
+			fbwz.printPotentialSiblings(out);
 			
 			
 			conn.close();

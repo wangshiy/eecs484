@@ -125,7 +125,7 @@ public class MyFakebookOracle extends FakebookOracle {
 	// (2) The shortest last name (if there is a tie, include all in result)
 	// (3) The most common last name, and the number of times it appears (if there is a tie, include all in result)
 	//
-	public void findNameInfo() throws SQLException { // Query1
+	public void findNameInfo() throws SQLException {
 	/*
 		Find the following information from your database and store the information as shown 
 		this.longestLastNames.add("JohnJacobJingleheimerSchmidt");
@@ -167,10 +167,10 @@ public class MyFakebookOracle extends FakebookOracle {
 			else break;
 		}
 
-		rst = stmt.executeQuery("select last_name, count(last_name) "
-		+ "from " + userTableName
-		+ " where last_name is not null "
-		+ "group by last_name order by 2 desc");
+		rst = stmt.executeQuery("SELECT last_name, count(last_name) "
+		+ "FROM " + userTableName + " "
+		+ "WHERE last_name IS NOT NULL "
+		+ "GROUP BY last_name ORDER BY 2 DESC");
 
     // Inset most common last name
     int baseCount = 0;
@@ -673,23 +673,23 @@ INNER JOIN (SELECT *
 	*/
 		Statement stmt = oracleConnection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-        ResultSet rst = stmt.executeQuery("SELECT U1.user_id, U1.first_name, U1.last_name, U2.user_id, U2.first_name, U2.last_name" 
-        + " FROM " + friendsTableName + " F, " + userTableName + " U1, " + userTableName + " U2," + hometownCityTableName + " H1, " + hometownCityTableName + " H2" 
-        + " WHERE F.user1_id = U1.user_id AND F.user2_id = U2.user_id AND " + " H1.user_id = U1.user_id AND H2.user_id = U2.user_id AND " + " U1.last_name = U2.last_name AND " + " H1.hometown_city_id = H2.hometown_city_id AND " + " ABS(U1.year_of_birth - U2.year_of_birth) < 10"
-        + " ORDER BY U1.user_id ASC, U2.user_id ASC"
-        );
+    ResultSet rst = stmt.executeQuery("SELECT U1.user_id, U1.first_name, U1.last_name, U2.user_id, U2.first_name, U2.last_name" 
+    + " FROM " + friendsTableName + " F, " + userTableName + " U1, " + userTableName + " U2," + hometownCityTableName + " H1, " + hometownCityTableName + " H2" 
+    + " WHERE F.user1_id = U1.user_id AND F.user2_id = U2.user_id AND " + " H1.user_id = U1.user_id AND H2.user_id = U2.user_id AND "
+    + " U1.last_name = U2.last_name AND " + " H1.hometown_city_id = H2.hometown_city_id AND " + " ABS(U1.year_of_birth - U2.year_of_birth) < 10"
+    + " ORDER BY U1.user_id ASC, U2.user_id ASC"
+    );
 
-        while(rst.next()) {
-            Long user1_id = rst.getLong(1);
-            String user1FirstName = rst.getString(2);
-            String user1LastName = rst.getString(3);
-            Long user2_id = rst.getLong(4);
-            String user2FirstName = rst.getString(5);
-            String user2LastName = rst.getString(6);
-		    SiblingInfo s = new SiblingInfo(user1_id, user1FirstName, user1LastName, user2_id, user2FirstName, user2LastName);
-	    	this.siblings.add(s);
-        }
-
+    while(rst.next()) {
+      Long user1_id = rst.getLong(1);
+      String user1FirstName = rst.getString(2);
+      String user1LastName = rst.getString(3);
+      Long user2_id = rst.getLong(4);
+      String user2FirstName = rst.getString(5);
+      String user2LastName = rst.getString(6);
+      SiblingInfo s = new SiblingInfo(user1_id, user1FirstName, user1LastName, user2_id, user2FirstName, user2LastName);
+      this.siblings.add(s);
+    }
 
 		rst.close();
 		stmt.close();
