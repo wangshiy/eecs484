@@ -1,6 +1,9 @@
 #include "catalog.h"
 #include "query.h"
 #include "index.h"
+#include <stdlib.h>
+#include <cstring>
+
 Status Operators::IndexSelect(const string& result,       // Name of the output relation
                               const int projCnt,          // Number of attributes in the projection
                               const AttrDesc projNames[], // Projection list (as AttrDesc)
@@ -11,10 +14,10 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
 {
   cout << "Algorithm: Index Select" << endl;
 
-  /* Your solution goes here 
+  /* Your solution goes here */
   //Initialize index and Heap
   Status returnStatus;
-  Index *index = new Index((*attrDesc).relName, (*attrDesc).attrOffset, (*attrDesc).attrLen, typeTrans(attrDesc->attrType), 0,status);
+  Index *index = new Index((*attrDesc).relName, (*attrDesc).attrOffset, (*attrDesc).attrLen, (const Datatype)(attrDesc->attrType), 0, returnStatus);
   if(returnStatus != OK){
     return returnStatus;
   }
@@ -34,8 +37,8 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
     RID heaprid;
     Record record;
 
-    while((status = index->scanNext(rid)) == OK){
-        returnStatus = fileRec.getRandomRecord(rid, record);
+    while((returnStatus = index->scanNext(rid)) == OK){
+        returnStatus = scan->getRandomRecord(rid, record);
         if(returnStatus != OK){
           return returnStatus;
         }
@@ -46,19 +49,19 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
         for (int j=0; j<projCnt; j++) {
           //creating output record
           memcpy((char *)new_record.data + new_record.length, (char *)record.data + projNames[j].attrOffset, projNames[j].attrLen);
-          newRec.length +=  projNames[j].attrLen;                                                
+          new_record.length +=  projNames[j].attrLen;                                                
         }
 
         returnStatus = heapfile.insertRecord(new_record,rid); //insert output into final heapfile relation
         if (returnStatus != OK) {
-            free(new_record.data); //free the pointer in any possible exit
+            free(new_record.data);
             return returnStatus;
         }
         free(new_record.data);    
     }
   }
 
-  */
+  
   return OK;
 }
 
