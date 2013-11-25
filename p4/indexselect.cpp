@@ -11,7 +11,7 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
 {
   cout << "Algorithm: Index Select" << endl;
 
-  /* Your solution goes here */
+  /* Your solution goes here 
   //Initialize index and Heap
   Status returnStatus;
   Index *index = new Index((*attrDesc).relName, (*attrDesc).attrOffset, (*attrDesc).attrLen, typeTrans(attrDesc->attrType), 0,status);
@@ -58,7 +58,7 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
     }
   }
 
-  
+  */
   return OK;
 }
 

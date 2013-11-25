@@ -41,10 +41,9 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 
 	/*
 		Step 2: Verify that the input attribute count = relation attribute count
-	*/
 	if(fullAttrCount != attrCnt){
-		return ATTRTYPEMISMATCH;	
-	}
+		return ATTRTYPEMISMATCH;
+  }	*/
 
 	/*
 		Step 3: Verify that none of the values in the attribute list = NULL
@@ -68,6 +67,7 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 
 	Record record;
 	record.data = malloc(length);
+  record.length = length;
 
 
 	/*
@@ -82,10 +82,11 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 
 				memcpy((char *)record.data + attrDescArray[j].attrOffset, attrList[i].attrValue, attrDescArray[j].attrLen);
 
-				// Step 7
+				// Step 7  BROKEN BROKEN BROKEN BROKEN
 				if(attrDescArray[j].indexed){
 					index = new Index(attrDescArray[j].relName, attrDescArray[j].attrOffset, attrDescArray[j].attrLen, (Datatype)attrDescArray[j].attrType, 1, returnStatus);
 					index->insertEntry(attrList[i].attrValue, outRid);
+          delete index;
 				}
 			}
 		}
@@ -100,5 +101,5 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 	returnStatus = heapFile->insertRecord(record, outRid);
 	free(record.data);
 	delete heapFile;
-    return OK;
+  return OK;
 }
