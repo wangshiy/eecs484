@@ -22,6 +22,7 @@ Status Operators::Select(const string & result,      // name of the output relat
 	int resultLen = 0;
 	Status returnStatus;
 
+	cout << "Top" <<  endl;
 	// Get projection attributes as attrDescs represented by projDesc
 	for(int i = 0; i < projCnt; i++) {
 		returnStatus = attrCat->getInfo(projNames[i].relName, projNames[i].attrName, projDesc[i]);
@@ -31,7 +32,6 @@ Status Operators::Select(const string & result,      // name of the output relat
 		// Add up all attribute lengths in the relation
 		resultLen += projDesc[i].attrLen;
 	}
-
 	if(attr != NULL) {
 		const string relName(attr->relName);
 		const string attrName(attr->attrName);
@@ -42,10 +42,14 @@ Status Operators::Select(const string & result,      // name of the output relat
 		if(returnStatus != OK){
 			return returnStatus;
 		}
+		string temp1(attr->relName);
+		string temp2(attr->attrName);
+		cout << temp1 << " asdfasdfas " << temp2 << endl;
 	}
-	// else{
-	//	return ScanSelect(result, projCnt, projDesc, NULL, op, attrValue, resultLen);
-	// }
+	else{
+		cout << result <<  endl;
+		return ScanSelect(result, projCnt, projDesc, NULL, op, NULL, resultLen);
+	}
 	
 	// Check if predicate has an index
 	if(predattrdesc.indexed && op == EQ) {

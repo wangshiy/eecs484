@@ -19,7 +19,7 @@ Status Operators::ScanSelect(const string& result,       // Name of the output r
   
   /* Your solution goes here */
   //Initialize variables
-	string relName(attrDesc->relName);
+  string relName(projNames[0].relName);
 	Status returnStatus;
 	RID outRid;
   RID heapRid;
