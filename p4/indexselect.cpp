@@ -18,19 +18,34 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
   //Initialize index and Heap
   Status returnStatus;
   Index *index = new Index((*attrDesc).relName, (*attrDesc).attrOffset, (*attrDesc).attrLen, (const Datatype)(attrDesc->attrType), 0, returnStatus);
+
+  cout << "Check 1" << endl;
+
   if(returnStatus != OK){
+    delete index;
     return returnStatus;
   }
   HeapFileScan *scan = new HeapFileScan((*attrDesc).relName, returnStatus);
+
+  cout << "Check 2" << endl;
+
   if(returnStatus != OK){
-        return returnStatus;
+    delete scan;
+    delete index;
+    return returnStatus;
   }
+
+  cout << "Check 3" << endl;
 
   HeapFile heapfile(result, returnStatus);
   if(returnStatus != OK){
-	return returnStatus;
+    delete scan;
+    delete index;
+  	return returnStatus;
   }
 //Start Scan --> if input = attrValue....
+
+  cout << "Check 4" << endl;
 
   if((returnStatus = index->startScan(attrValue)) == OK){
     RID rid;
@@ -39,29 +54,50 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
 
     while((returnStatus = index->scanNext(rid)) == OK){
         returnStatus = scan->getRandomRecord(rid, record);
+
+        cout << "Check 5" << endl;
+
         if(returnStatus != OK){
+          delete scan;
+          delete index;
           return returnStatus;
         }
+
+        cout << "Check 6" << endl;
+
         Record new_record;
         new_record.length = 0;
         new_record.data = malloc(reclen);
+
+        cout << "Check 7" << endl;
         
         for (int j=0; j<projCnt; j++) {
           //creating output record
+          cout << "Check 8" << endl;
+
           memcpy((char *)new_record.data + new_record.length, (char *)record.data + projNames[j].attrOffset, projNames[j].attrLen);
           new_record.length +=  projNames[j].attrLen;                                                
         }
 
+        cout << "Check 9" << endl;
+
         returnStatus = heapfile.insertRecord(new_record,rid); //insert output into final heapfile relation
         if (returnStatus != OK) {
             free(new_record.data);
+            delete scan;
+            delete index;
             return returnStatus;
         }
         free(new_record.data);    
     }
   }
 
-  
+  cout << "Check 10" << endl;
+
+  index->endScan();
+  delete scan;
+  delete index;
+
   return OK;
 }
 
