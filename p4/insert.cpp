@@ -73,6 +73,8 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 	/*
 		Step 6/7: Search attrDescArray for a matching attrName; Insert index if index is found
 	*/
+		
+	HeapFile* heapFile = new HeapFile(relation, returnStatus);
 
 	for(int i = 0; i < attrCnt; i++){
 		// Step 6
@@ -86,19 +88,23 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 				if(attrDescArray[j].indexed){
 					index = new Index(attrDescArray[j].relName, attrDescArray[j].attrOffset, attrDescArray[j].attrLen, (Datatype)attrDescArray[j].attrType, 1, returnStatus);
 					index->insertEntry(attrList[i].attrValue, outRid);
-          delete index;
+          			delete index;
+				}
+				returnStatus = heapFile->insertRecord(record, outRid);
+
+				if(returnStatus != OK) {
+					return returnStatus;
 				}
 			}
 		}
 	}
 
-	HeapFile* heapFile = new HeapFile(relation, returnStatus);
 
 	/*
 		Step 8: Insert into heapfile...segfaults happenin :(
 	*/
 
-	returnStatus = heapFile->insertRecord(record, outRid);
+	//returnStatus = heapFile->insertRecord(record, outRid);
 	free(record.data);
 	delete heapFile;
   return OK;

@@ -17,7 +17,8 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
   /* Your solution goes here */
   //Initialize index and Heap
   Status returnStatus;
-  Index *index = new Index((*attrDesc).relName, (*attrDesc).attrOffset, (*attrDesc).attrLen, (const Datatype)(attrDesc->attrType), 0, returnStatus);
+  string relName(attrDesc->relName);
+  Index *index = new Index(relName, attrDesc->attrOffset, attrDesc->attrLen, (const Datatype)(attrDesc->attrType), 0, returnStatus);
 
   cout << "Check 1" << endl;
 
@@ -25,17 +26,11 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
     delete index;
     return returnStatus;
   }
-  HeapFileScan *scan = new HeapFileScan((*attrDesc).relName, returnStatus);
-
-  cout << "Check 2" << endl;
-
-  if(returnStatus != OK){
-    delete scan;
-    delete index;
-    return returnStatus;
-  }
-
-  cout << "Check 3" << endl;
+  //HeapFileScan *scan = new HeapFileScan((*attrDesc).relName, returnStatus);
+  // Filtered Scan
+  HeapFileScan *scan = new HeapFileScan(relName, attrDesc->attrOffset, 
+                                  attrDesc->attrLen, (Datatype)attrDesc->attrType, 
+                                  (char*)attrValue, op, returnStatus);
 
   HeapFile heapfile(result, returnStatus);
   if(returnStatus != OK){
@@ -53,6 +48,7 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
     Record record;
 
     while((returnStatus = index->scanNext(rid)) == OK){
+        cout << rid.pageNo << endl;
         returnStatus = scan->getRandomRecord(rid, record);
 
         cout << "Check 5" << endl;
