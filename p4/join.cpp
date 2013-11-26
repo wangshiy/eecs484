@@ -24,6 +24,65 @@ Status Operators::Join(const string& result,           // Name of the output rel
     	               const attrInfo* attr2)          // Right attr in the join predicate
 {
     /* Your solution goes here */
+    Status returnStatus;
+    int resultLen = 0;
+    AttrDesc* projDesc = new AttrDesc[projCnt];
+    AttrDesc attrdesc_1;
+    AttrDesc attrdesc_2;
+
+    // Get projection attributes as attrDescs represented by projDesc
+    for(int i = 0; i < projCnt; i++) {
+        returnStatus = attrCat->getInfo(projNames[i].relName, projNames[i].attrName, projDesc[i]);
+        if(returnStatus != OK){
+            return returnStatus;
+        }
+        // Add up all attribute lengths in the relation
+        resultLen += projDesc[i].attrLen;
+    }
+    // Initialize Left attr in join predicate 
+    returnStatus = attrCat->getInfo(attr1->relName, attr1->attrName, attrdesc_1);
+    if(returnStatus != OK){
+        return returnStatus;
+    }
+    // Initialize Right attr in join predicate 
+    returnStatus = attrCat->getInfo(attr2->relName, attr2->attrName, attrdesc_2);
+    if(returnStatus != OK){
+        return returnStatus;
+    }
+
+    if(op == EQ){
+        if(attrdesc_1.indexed){
+            returnStatus = INL(result, projCnt, projDesc, attrdesc_1, op, attrdesc_2, resultLen);
+            if(returnStatus != OK){
+                return returnStatus;
+            }
+            else{
+                return OK;
+            }
+        }
+        if(attrdesc_2.indexed){
+            returnStatus = INL(result, projCnt, projDesc, attrdesc_2, op, attrdesc_1, resultLen);
+            if(returnStatus != OK){
+                return returnStatus;
+            }
+            else{
+                return OK;
+            }
+        }
+        returnStatus = SMJ(result, projCnt, projDesc, attrdesc_1, op, attrdesc_2, resultLen);
+        if(returnStatus != OK){
+            return returnStatus;
+        }
+        else{
+            return OK;
+        }
+    }
+    else{
+        returnStatus = SNL(result, projCnt, projDesc, attrdesc_1, op, attrdesc_2, resultLen);
+        if(returnStatus != OK){
+            return returnStatus;
+        }
+    }
 
 	return OK;
 }

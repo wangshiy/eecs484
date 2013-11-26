@@ -20,8 +20,6 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
   string relName(attrDesc->relName);
   Index *index = new Index(relName, attrDesc->attrOffset, attrDesc->attrLen, (const Datatype)(attrDesc->attrType), 0, returnStatus);
 
-  cout << "Check 1" << endl;
-
   if(returnStatus != OK){
     delete index;
     return returnStatus;
@@ -40,18 +38,14 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
   }
 //Start Scan --> if input = attrValue....
 
-  cout << "Check 4" << endl;
-
   if((returnStatus = index->startScan(attrValue)) == OK){
     RID rid;
     RID heaprid;
     Record record;
 
     while((returnStatus = index->scanNext(rid)) == OK){
-        cout << rid.pageNo << endl;
-        returnStatus = scan->getRandomRecord(rid, record);
 
-        cout << "Check 5" << endl;
+        returnStatus = scan->getRandomRecord(rid, record);
 
         if(returnStatus != OK){
           delete scan;
@@ -59,23 +53,15 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
           return returnStatus;
         }
 
-        cout << "Check 6" << endl;
-
         Record new_record;
         new_record.length = 0;
         new_record.data = malloc(reclen);
-
-        cout << "Check 7" << endl;
         
         for (int j=0; j<projCnt; j++) {
           //creating output record
-          cout << "Check 8" << endl;
-
           memcpy((char *)new_record.data + new_record.length, (char *)record.data + projNames[j].attrOffset, projNames[j].attrLen);
           new_record.length +=  projNames[j].attrLen;                                                
         }
-
-        cout << "Check 9" << endl;
 
         returnStatus = heapfile.insertRecord(new_record,rid); //insert output into final heapfile relation
         if (returnStatus != OK) {
@@ -87,8 +73,6 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
         free(new_record.data);    
     }
   }
-
-  cout << "Check 10" << endl;
 
   index->endScan();
   delete scan;
