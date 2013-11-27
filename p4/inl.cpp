@@ -35,13 +35,11 @@ Status Operators::INL(const string& result,           // Name of the output rela
 	Record record1;
 	Record record2;
 
-	cout<<"Check 1"<<endl;
   returnStatus = attrCat->getRelInfo(attrDesc1.relName, attrCnt_1, rel_attr_1);
   if(returnStatus != OK){
     return returnStatus;
   }
 
-	cout<<"Check 2"<<endl;
   returnStatus = attrCat->getRelInfo(attrDesc2.relName, attrCnt_2, rel_attr_2);
   if(returnStatus != OK){
     return returnStatus;
@@ -56,7 +54,6 @@ Status Operators::INL(const string& result,           // Name of the output rela
                                   attrDesc2.attrLen, (Datatype)attrDesc2.attrType, 
                                   NULL, op, returnStatus);
 
-	cout<<"Check 3"<<endl;
   if(returnStatus != OK){
         return returnStatus;
   }
@@ -64,7 +61,6 @@ Status Operators::INL(const string& result,           // Name of the output rela
                                   attrDesc1.attrLen, (Datatype)attrDesc1.attrType, 
                                   NULL, op, returnStatus);
 
-	cout<<"Check 4"<<endl;
   if(returnStatus != OK){
         return returnStatus;
   }
@@ -74,7 +70,6 @@ Status Operators::INL(const string& result,           // Name of the output rela
   Index* index;
   index = new Index(attrDesc1.relName, attrDesc1.attrOffset, attrDesc1.attrLen, (Datatype)attrDesc1.attrType, 0, returnStatus);
 
-	cout<<"Check 5"<<endl;
   if(returnStatus!= OK) {
    	return returnStatus;
   }
@@ -85,27 +80,15 @@ Status Operators::INL(const string& result,           // Name of the output rela
 
     memcpy(attr2_filter, (char*) record2.data + attrDesc2.attrOffset, attrDesc2.attrLen);
 
-    cout << "first attr = " << *(int*) (record2.data + attrDesc2.attrOffset) << endl;
     //relation 1 loop scan
-    /* HeapFileScan *attrDesc1_scan = new HeapFileScan(attrDesc1.relName, attrDesc1.attrOffset, 
-                                    attrDesc1.attrLen, (Datatype)attrDesc1.attrType, 
-                                    attr2_filter, op, returnStatus);
-    if(returnStatus != OK){
-          return returnStatus;
-    } */
-		
-
    
     returnStatus = index -> startScan(attr2_filter);
-		cout<<"Check 6"<<endl;
     if(returnStatus != OK) {
     	return returnStatus;
     }
   	while(( returnStatus = index -> scanNext(rid1)) == OK) {
 
   		returnStatus = attrDesc1_scan ->getRandomRecord(rid1, record1);
-
-			cout<<"Check 7"<<endl;
 
   		if(returnStatus != OK) {
   			return returnStatus;
@@ -135,7 +118,6 @@ Status Operators::INL(const string& result,           // Name of the output rela
       }
 
       returnStatus = heapFile->insertRecord(record, rid);
-			cout<<"Check 8"<<endl;
       if(returnStatus != OK){
         return returnStatus;
       }
@@ -144,8 +126,6 @@ Status Operators::INL(const string& result,           // Name of the output rela
    	}
     delete attr2_filter;
  	}
-
-	cout<<"Check 9"<<endl;
 
   index->endScan();
   delete attrDesc1_scan;

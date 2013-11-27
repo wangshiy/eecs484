@@ -46,7 +46,6 @@ Status Operators::IndexSelect(const string& result,       // Name of the output 
     while((returnStatus = index->scanNext(rid)) == OK){
 
         returnStatus = scan->getRandomRecord(rid, record);
-        cout << "RID " << rid.pageNo << endl;
         if(returnStatus != OK){
           delete scan;
           delete index;

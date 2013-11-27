@@ -75,7 +75,7 @@ Status Operators::SNL(const string& result,           // Output relation name
     if(returnStatus != OK){
           return returnStatus;
     }
-//    cout << "first attr = " << *(int*) (record2.data + attrDesc2.attrOffset) << endl;
+
   	while( (returnStatus = attrDesc1_scan->scanNext(rid1, record1)) == OK) {
 
       Record record;
