@@ -80,17 +80,16 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 		// Step 6
 		for(int j = 0; j < fullAttrCount; j++) {
 			if(strcmp(attrList[i].attrName, attrDescArray[j].attrName) == 0) {
-				cout << attrList[i].attrName << endl;
 
 				memcpy((char *)record.data + attrDescArray[j].attrOffset, attrList[i].attrValue, attrDescArray[j].attrLen);
 
 				// Step 7  BROKEN BROKEN BROKEN BROKEN
 				if(attrDescArray[j].indexed){
-					index = new Index(attrDescArray[j].relName, attrDescArray[j].attrOffset, attrDescArray[j].attrLen, (Datatype)attrDescArray[j].attrType, 1, returnStatus);
+					index = new Index(attrDescArray[j].relName, attrDescArray[j].attrOffset, attrDescArray[j].attrLen, (Datatype)attrDescArray[j].attrType, 0, returnStatus);
 					index->insertEntry(attrList[i].attrValue, outRid);
+					returnStatus = heapFile->insertRecord(record, outRid);
           			delete index;
 				}
-				//returnStatus = heapFile->insertRecord(record, outRid);
 
 				if(returnStatus != OK) {
 					return returnStatus;
