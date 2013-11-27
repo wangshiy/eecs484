@@ -90,7 +90,7 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 					index->insertEntry(attrList[i].attrValue, outRid);
           			delete index;
 				}
-				returnStatus = heapFile->insertRecord(record, outRid);
+				//returnStatus = heapFile->insertRecord(record, outRid);
 
 				if(returnStatus != OK) {
 					return returnStatus;
@@ -98,7 +98,10 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 			}
 		}
 	}
-
+	returnStatus = heapFile->insertRecord(record, outRid);
+	if(returnStatus != OK) {
+		return returnStatus;
+	}
 
 	/*
 		Step 8: Insert into heapfile...segfaults happenin :(
