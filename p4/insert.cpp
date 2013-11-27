@@ -67,7 +67,7 @@ Status Updates::Insert(const string& relation,      // Name of the relation
 
 	Record record;
 	record.data = malloc(length);
-  record.length = length;
+  	record.length = length;
 
 
 	/*
